@@ -1,0 +1,630 @@
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━
+   Ch.3 宿泊業テーマ — ブルー/ネイビー
+   ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+:root {
+    --ch3-bg: #0a1628;
+    --ch3-card: rgba(15, 30, 60, 0.85);
+    --ch3-card-hover: rgba(20, 40, 80, 0.95);
+    --ch3-border: rgba(80, 140, 220, 0.25);
+    --ch3-border-glow: rgba(80, 160, 255, 0.45);
+    --ch3-text: #c8daf0;
+    --ch3-text-sub: #6a8bb5;
+    --ch3-accent: #4a9eff;
+    --ch3-accent-deep: #2563eb;
+    --ch3-green: #34d399;
+    --ch3-red: #f87171;
+    --ch3-gold: #fbbf24;
+    --ch3-warm: #fb923c;
+    --ch3-purple: #a78bfa;
+    --ch3-gradient1: linear-gradient(135deg, #0a1628 0%, #0f2847 50%, #1a365d 100%);
+    --ch3-gradient-accent: linear-gradient(135deg, #2563eb, #4a9eff);
+    --ch3-gradient-warm: linear-gradient(135deg, #f59e0b, #fb923c);
+}
+
+/* ── コンテナ ── */
+.ch3-container {
+    min-height: 100vh;
+    background: var(--ch3-gradient1);
+    color: var(--ch3-text);
+    font-family: 'Inter', 'Hiragino Sans', sans-serif;
+    padding: 16px;
+    max-width: 430px;
+    margin: 0 auto;
+}
+
+/* ── カード ── */
+.ch3-card {
+    background: var(--ch3-card);
+    border: 1px solid var(--ch3-border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+    backdrop-filter: blur(10px);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ch3-card:hover {
+    border-color: var(--ch3-border-glow);
+}
+
+.ch3-card--selected {
+    border-color: var(--ch3-accent);
+    box-shadow: 0 0 16px rgba(74, 158, 255, 0.18);
+}
+
+.ch3-card--clickable {
+    cursor: pointer;
+}
+
+.ch3-card--clickable:hover {
+    background: var(--ch3-card-hover);
+}
+
+/* ── タイトル・ヘッダ ── */
+.ch3-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 18px;
+    background: var(--ch3-gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ch3-subtitle {
+    font-size: 0.82rem;
+    color: var(--ch3-text-sub);
+    text-align: center;
+    margin-bottom: 14px;
+}
+
+.ch3-section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ch3-border);
+    color: var(--ch3-accent);
+}
+
+/* ── ボタン ── */
+.ch3-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--ch3-gradient-accent);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.3s;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.ch3-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+}
+
+.ch3-btn:active {
+    transform: translateY(0);
+}
+
+.ch3-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ch3-btn--secondary {
+    background: transparent;
+    border: 1px solid var(--ch3-border);
+    color: var(--ch3-text);
+}
+
+.ch3-btn--secondary:hover {
+    border-color: var(--ch3-accent);
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.ch3-btn--danger {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+/* ── 行・ラベル ── */
+.ch3-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 0.78rem;
+    border-bottom: 1px solid rgba(80, 140, 220, 0.08);
+}
+
+.ch3-row:last-child {
+    border-bottom: none;
+}
+
+.ch3-row__label {
+    color: var(--ch3-text-sub);
+}
+
+.ch3-row__value {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.ch3-row--highlight .ch3-row__value {
+    color: var(--ch3-accent);
+}
+
+.ch3-row--profit .ch3-row__value {
+    color: var(--ch3-green);
+}
+
+.ch3-row--loss .ch3-row__value {
+    color: var(--ch3-red);
+}
+
+/* ── ヘッダバー ── */
+.ch3-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    background: var(--ch3-card);
+    border-radius: 12px;
+    border: 1px solid var(--ch3-border);
+    font-size: 0.72rem;
+}
+
+.ch3-header__turn {
+    font-weight: 700;
+    color: var(--ch3-accent);
+}
+
+.ch3-header__money {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ch3-green);
+}
+
+.ch3-header__phase {
+    color: var(--ch3-text-sub);
+}
+
+/* ── 稼働率ゲージ ── */
+.ch3-gauge {
+    width: 100%;
+    height: 10px;
+    background: rgba(80, 140, 220, 0.12);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 4px 0;
+}
+
+.ch3-gauge__fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.6s ease;
+}
+
+.ch3-gauge__fill--green {
+    background: var(--ch3-green);
+}
+
+.ch3-gauge__fill--yellow {
+    background: var(--ch3-gold);
+}
+
+.ch3-gauge__fill--red {
+    background: var(--ch3-red);
+}
+
+.ch3-gauge__fill--blue {
+    background: var(--ch3-accent);
+}
+
+/* ── KPIカード ── */
+.ch3-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.ch3-kpi {
+    background: var(--ch3-card);
+    border: 1px solid var(--ch3-border);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+}
+
+.ch3-kpi__label {
+    font-size: 0.68rem;
+    color: var(--ch3-text-sub);
+    margin-bottom: 4px;
+}
+
+.ch3-kpi__value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.ch3-kpi__value--accent {
+    color: var(--ch3-accent);
+}
+
+.ch3-kpi__value--green {
+    color: var(--ch3-green);
+}
+
+.ch3-kpi__value--red {
+    color: var(--ch3-red);
+}
+
+.ch3-kpi__value--gold {
+    color: var(--ch3-gold);
+}
+
+.ch3-kpi__unit {
+    font-size: 0.6rem;
+    color: var(--ch3-text-sub);
+}
+
+/* ── イベント ── */
+.ch3-event {
+    background: var(--ch3-card);
+    border: 1px solid var(--ch3-border-glow);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 12px 0;
+    box-shadow: 0 0 20px rgba(80, 160, 255, 0.08);
+}
+
+.ch3-event__title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--ch3-accent);
+}
+
+.ch3-event__text {
+    font-size: 0.82rem;
+    line-height: 1.7;
+    white-space: pre-line;
+    margin-bottom: 14px;
+    color: var(--ch3-text);
+}
+
+.ch3-event__character {
+    background: rgba(37, 99, 235, 0.08);
+    border-left: 3px solid var(--ch3-accent);
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.78rem;
+}
+
+.ch3-event__character-name {
+    font-weight: 700;
+    color: var(--ch3-accent);
+    margin-bottom: 4px;
+}
+
+.ch3-event__choices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.ch3-event__choice-btn {
+    padding: 10px 14px;
+    border: 1px solid var(--ch3-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ch3-text);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.ch3-event__choice-btn:hover {
+    border-color: var(--ch3-accent);
+    background: rgba(37, 99, 235, 0.08);
+    color: #fff;
+}
+
+/* ── 結果カード ── */
+.ch3-event__result {
+    font-size: 0.82rem;
+    line-height: 1.6;
+    padding: 12px;
+    background: rgba(52, 211, 153, 0.06);
+    border-left: 3px solid var(--ch3-green);
+    border-radius: 0 8px 8px 0;
+    margin: 10px 0;
+}
+
+/* ── ダイナミックプライシング ── */
+.ch3-pricing {
+    margin: 10px 0;
+}
+
+.ch3-pricing__slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 0.78rem;
+}
+
+.ch3-pricing__slider-label {
+    width: 60px;
+    color: var(--ch3-text-sub);
+    flex-shrink: 0;
+}
+
+.ch3-pricing__slider {
+    flex: 1;
+    height: 4px;
+    appearance: none;
+    background: rgba(80, 140, 220, 0.15);
+    border-radius: 4px;
+    outline: none;
+}
+
+.ch3-pricing__slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--ch3-accent);
+    cursor: pointer;
+}
+
+.ch3-pricing__value {
+    width: 45px;
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--ch3-accent);
+}
+
+/* ── スキルバッジ ── */
+.ch3-skill-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    margin: 3px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    background: rgba(37, 99, 235, 0.12);
+    border: 1px solid rgba(74, 158, 255, 0.2);
+    color: var(--ch3-accent);
+}
+
+/* ── セットアップ ── */
+.ch3-setup {
+    padding: 16px 0;
+}
+
+.ch3-setup__step {
+    font-size: 0.7rem;
+    color: var(--ch3-text-sub);
+    margin-bottom: 4px;
+}
+
+.ch3-setup__confirm {
+    composes: ch3-btn;
+}
+
+/* ── プロパティカード ── */
+.ch3-property-card {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ch3-property-card:hover {
+    border-color: var(--ch3-accent);
+}
+
+.ch3-property-card--selected {
+    border-color: var(--ch3-accent);
+    box-shadow: 0 0 16px rgba(74, 158, 255, 0.18);
+}
+
+.ch3-property-card__name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #fff;
+}
+
+.ch3-property-card__desc {
+    font-size: 0.72rem;
+    color: var(--ch3-text-sub);
+    margin-bottom: 8px;
+}
+
+/* ── 施設チップ ── */
+.ch3-facility-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid var(--ch3-border);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+
+.ch3-facility-chip:hover {
+    border-color: var(--ch3-accent);
+}
+
+.ch3-facility-chip--selected {
+    background: rgba(37, 99, 235, 0.12);
+    border-color: var(--ch3-accent);
+    color: var(--ch3-accent);
+}
+
+/* ── レポート ── */
+.ch3-report {
+    padding: 12px 0;
+}
+
+.ch3-report__section {
+    margin-bottom: 18px;
+}
+
+.ch3-report__row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 0.76rem;
+    border-bottom: 1px solid rgba(80, 140, 220, 0.06);
+}
+
+.ch3-report__row--highlight {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--ch3-accent);
+}
+
+.ch3-report__skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+/* ── ダッシュボード追加 ── */
+.ch3-occ-label {
+    font-size: 0.7rem;
+    color: var(--ch3-text-sub);
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2px;
+}
+
+.ch3-staff-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.ch3-staff-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    padding: 6px 8px;
+    background: rgba(80, 140, 220, 0.05);
+    border-radius: 6px;
+}
+
+.ch3-staff-row__name {
+    font-weight: 600;
+}
+
+.ch3-staff-row__fire {
+    font-size: 0.65rem;
+    color: var(--ch3-red);
+    cursor: pointer;
+    border: 1px solid var(--ch3-red);
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: transparent;
+}
+
+/* ── 開業演出 ── */
+.ch3-opening {
+    text-align: center;
+    padding: 40px 16px;
+}
+
+.ch3-opening__story {
+    font-size: 0.85rem;
+    line-height: 1.8;
+    white-space: pre-line;
+    margin-bottom: 20px;
+}
+
+.ch3-opening__story p {
+    opacity: 0;
+    animation: ch3FadeUp 0.6s ease forwards;
+}
+
+/* ── EXIT選択 ── */
+.ch3-exit-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 14px 0;
+}
+
+.ch3-exit-card {
+    cursor: pointer;
+}
+
+.ch3-exit-card__name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 4px;
+    color: #fff;
+}
+
+.ch3-exit-card__desc {
+    font-size: 0.72rem;
+    color: var(--ch3-text-sub);
+    margin-bottom: 6px;
+}
+
+.ch3-exit-card__amount {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ch3-gold);
+}
+
+/* ── アニメーション ── */
+@keyframes ch3FadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ch3Pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.ch3-anim-fadein {
+    animation: ch3FadeUp 0.6s ease forwards;
+}
