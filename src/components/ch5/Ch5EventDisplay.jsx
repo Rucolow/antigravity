@@ -46,7 +46,11 @@ export default function Ch5EventDisplay() {
 
             <div className="ch5-card">
                 <div className="ch5-event__title">{ev.title}</div>
-                <div className="ch5-event__text">{ev.text}</div>
+                <div className="ch5-event__text">
+                    {(Array.isArray(ev.text) ? ev.text : (ev.text || '').split('\n')).map((line, i) => (
+                        <p key={i} style={{ margin: '4px 0' }}>{line || '\u00A0'}</p>
+                    ))}
+                </div>
 
                 {ev.character && ev.characterText && (
                     <div className="ch5-event__character">
@@ -73,9 +77,14 @@ export default function Ch5EventDisplay() {
                     ))}
                 </div>
             ) : (
-                <button className="ch5-btn ch5-btn--primary" onClick={() => dismissEvent(null)}>
-                    OK →
-                </button>
+                <>
+                    <button className="ch5-btn ch5-btn--primary" onClick={() => dismissEvent(null)}>
+                        OK →
+                    </button>
+                    <button onClick={() => dismissEvent(null)} style={{ background: 'none', border: 'none', color: 'var(--ch5-text-sub)', fontSize: '0.65rem', cursor: 'pointer', marginTop: 6, opacity: 0.5, width: '100%' }}>
+                        スキップ ▸
+                    </button>
+                </>
             )}
         </>
     );

@@ -1,12 +1,21 @@
 /**
  * Ch.5 ダッシュボード
  */
-import React from 'react';
+import React, { useState } from 'react';
+import GoalBar from '../GoalBar';
+import AdvisorBar from '../AdvisorBar';
+import WeeklyFocusBar from '../WeeklyFocusBar';
+import { CH5_GOAL } from '../../data/chapterGoals';
+import { getWeeklyFocusCards } from '../../data/weeklyFocusCards';
 import { useREStore } from '../../store/realEstateEngine';
 import { getCh5Phase, getCh5Month, getCh5Year, NET_WORTH_TARGET } from '../../data/ch5Constants';
+import KPITooltip from '../KPITooltip';
+import BenchmarkBar from '../BenchmarkBar';
 
 export default function REDashboard() {
     const s = useREStore();
+    const [selectedFocus, setSelectedFocus] = useState(s._lastFocus || null);
+    const state = s; // alias for WeeklyFocusBar
 
     const phase = getCh5Phase(s.turn);
     const month = getCh5Month(s.turn);
@@ -39,31 +48,46 @@ export default function REDashboard() {
                 </div>
             </div>
 
+            {/* チャプターゴール */}
+            <GoalBar goal={CH5_GOAL} state={state} />
+            <AdvisorBar chapter={5} state={state} />
+            <WeeklyFocusBar cards={getWeeklyFocusCards(5)} selected={selectedFocus} onSelect={setSelectedFocus} />
+
             {/* KPI */}
             <div className="ch5-kpi-row ch5-kpi-row--quad">
                 <div className="ch5-kpi">
-                    <div className="ch5-kpi__label">純資産</div>
+                    <div className="ch5-kpi__label"><KPITooltip term="純資産">純資産</KPITooltip></div>
                     <div className="ch5-kpi__value">¥{Math.round((s.netWorth || 0) / 10000).toLocaleString()}万</div>
                 </div>
                 <div className="ch5-kpi">
-                    <div className="ch5-kpi__label">LTV</div>
+                    <div className="ch5-kpi__label"><KPITooltip term="LTV比率">LTV</KPITooltip></div>
                     <div className={`ch5-kpi__value ${s.ltvRatio >= 80 ? 'ch5-kpi__value--red' : 'ch5-kpi__value--blue'}`}>
                         {s.ltvRatio}%
                     </div>
                 </div>
                 <div className="ch5-kpi">
-                    <div className="ch5-kpi__label">DSCR</div>
+                    <div className="ch5-kpi__label"><KPITooltip term="DSCR">DSCR</KPITooltip></div>
                     <div className={`ch5-kpi__value ${dscrClass === 'safe' ? 'ch5-kpi__value--green' : dscrClass === 'danger' ? 'ch5-kpi__value--red' : ''}`}>
                         {dscrMin === 99 ? '—' : dscrMin}
                     </div>
                 </div>
                 <div className="ch5-kpi">
-                    <div className="ch5-kpi__label">月間CF</div>
+                    <div className="ch5-kpi__label"><KPITooltip term="CF">月間CF</KPITooltip></div>
                     <div className={`ch5-kpi__value ${s.monthlyCashFlow >= 0 ? 'ch5-kpi__value--green' : 'ch5-kpi__value--red'}`}>
                         ¥{Math.round((s.monthlyCashFlow || 0) / 1000)}K
                     </div>
                 </div>
             </div>
+
+            {/* 業界ベンチマーク */}
+            {s.turn >= 4 && (
+                <div style={{ padding: '8px 16px' }}>
+                    <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.1em' }}>業界平均との比較</div>
+                    <BenchmarkBar label="DSCR" value={dscrMin === 99 ? 0 : dscrMin} avg={1.3} max={3} unit="x" />
+                    <BenchmarkBar label="LTV比率" value={s.ltvRatio} avg={70} max={100} unit="%" lowerIsBetter />
+                    <BenchmarkBar label="月間CF" value={Math.round((s.monthlyCashFlow || 0) / 10000)} avg={10} max={50} unit="万" />
+                </div>
+            )}
 
             {/* P&L */}
             <div className="ch5-card">
@@ -147,8 +171,27 @@ export default function REDashboard() {
                 )}
             </div>
 
-            <button className="ch5-btn ch5-btn--primary" onClick={s.confirmMonth}>
-                次の月へ →
+            {s.turn >= 10 && (
+                <button
+                    onClick={() => useREStore.setState({ autoMode: !s.autoMode })}
+                    className="ch5-btn ch5-btn--secondary"
+                    style={{
+                        background: s.autoMode ? 'var(--ch5-accent)' : 'transparent',
+                        color: s.autoMode ? '#fff' : 'var(--ch5-accent)',
+                        border: '1px solid var(--ch5-accent)',
+                        fontSize: '0.72rem', marginBottom: 8,
+                    }}
+                >
+                    ⚡ オート {s.autoMode ? 'ON' : 'OFF'}
+                </button>
+            )}
+            <button className="ch5-btn ch5-btn--primary" disabled={!selectedFocus} onClick={() => {
+                const card = getWeeklyFocusCards(5).find(c => c.id === selectedFocus);
+                useREStore.setState({ _weeklyFocus: card ? card.apply() : {}, _lastFocus: selectedFocus });
+                s.confirmMonth();
+                setSelectedFocus(null);
+            }}>
+                {!selectedFocus ? '⚡ 判断を選んでください' : '次の月へ →'}
             </button>
         </>
     );

@@ -3,6 +3,7 @@
  * 設計書: antigravity-ch4-detail-v3.md
  */
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import {
     PRODUCT_CATEGORIES, BRAND_CONCEPTS, PACKAGE_DESIGNS,
     AD_PLATFORMS, SALES_CHANNELS, CH4_FIXED_COSTS, CH4_VARIABLE_COSTS,
@@ -300,6 +301,7 @@ const initialState = {
     weeklyFixedCosts: 0,
     totalSales: 0,
     totalProfit: 0,
+    profitHistory: [],  // [{ turn, sales, profit, orders }]
 
     // CRM
     crmEnabled: { newsletter: false, coupon: false, subscription: false },
@@ -362,307 +364,322 @@ const initialState = {
     savePoints: {},
 };
 
-export const useECStore = create((set, get) => ({
-    ...initialState,
-
-    // ━━ 初期化 ━━
-    initFromCh3: (ch3State) => {
-        const prevSkills = ch3State.skills || [];
-        let bonus = 0;
-        if (prevSkills.includes('直販力')) bonus += 0.05;
-        set({
+export const useECStore = create(
+    persist(
+        (set, get) => ({
             ...initialState,
-            money: ch3State.money || 60000000,
-            previousSkills: prevSkills,
-            allPreviousSkills: ch3State.allPreviousSkills || prevSkills,
-            repeatBoost: bonus,
-            ayaFromCh3: ch3State.ayaJoined || ch3State.ayaFromCh2 || false,
-        });
-    },
 
-    resetCh4: () => set({ ...initialState }),
+            // ━━ 初期化 ━━
+            initFromCh3: (ch3State) => {
+                const prevSkills = ch3State.skills || [];
+                let bonus = 0;
+                if (prevSkills.includes('直販力')) bonus += 0.05;
+                set({
+                    ...initialState,
+                    money: ch3State.money || 60000000,
+                    previousSkills: prevSkills,
+                    allPreviousSkills: ch3State.allPreviousSkills || prevSkills,
+                    repeatBoost: bonus,
+                    ayaFromCh3: ch3State.ayaJoined || ch3State.ayaFromCh2 || false,
+                });
+            },
 
-    // ━━ セットアップ ━━
-    selectProduct: (key) => {
-        if (!PRODUCT_CATEGORIES[key]) return;
-        const cat = PRODUCT_CATEGORIES[key];
-        set({
-            productCategory: key,
-            repeatRate: cat.repeatRate,
-            money: get().money - cat.initialInventoryCost,
-            phase: 'ch4-brand-select',
-        });
-    },
+            resetCh4: () => set({ ...initialState }),
 
-    selectBrand: (conceptKey, pkgKey) => {
-        if (!BRAND_CONCEPTS[conceptKey] || !PACKAGE_DESIGNS[pkgKey]) return;
-        const pkg = PACKAGE_DESIGNS[pkgKey];
-        set({
-            brandConcept: conceptKey,
-            packageDesign: pkgKey,
-            reputation: 3.5 + pkg.reputationBonus,
-            money: get().money - pkg.cost,
-            phase: 'ch4-channel-setup',
-        });
-    },
+            // ━━ セットアップ ━━
+            selectProduct: (key) => {
+                if (!PRODUCT_CATEGORIES[key]) return;
+                const cat = PRODUCT_CATEGORIES[key];
+                set({
+                    productCategory: key,
+                    repeatRate: cat.repeatRate,
+                    money: get().money - cat.initialInventoryCost,
+                    phase: 'ch4-brand-select',
+                });
+            },
 
-    setupChannelsAndAds: (channels, adBudgets) => {
-        const state = get();
-        let cost = 0;
-        for (const ch of channels) {
-            cost += SALES_CHANNELS[ch]?.setupCost || 0;
-        }
-        set({
-            channels,
-            adBudgets,
-            money: state.money - cost,
-            turn: 1,
-            phase: 'ch4-opening',
-        });
-    },
+            selectBrand: (conceptKey, pkgKey) => {
+                if (!BRAND_CONCEPTS[conceptKey] || !PACKAGE_DESIGNS[pkgKey]) return;
+                const pkg = PACKAGE_DESIGNS[pkgKey];
+                set({
+                    brandConcept: conceptKey,
+                    packageDesign: pkgKey,
+                    reputation: 3.5 + pkg.reputationBonus,
+                    money: get().money - pkg.cost,
+                    phase: 'ch4-channel-setup',
+                });
+            },
 
-    startGameplay: () => set({ phase: 'ch4-dashboard' }),
+            setupChannelsAndAds: (channels, adBudgets) => {
+                const state = get();
+                let cost = 0;
+                for (const ch of channels) {
+                    cost += SALES_CHANNELS[ch]?.setupCost || 0;
+                }
+                set({
+                    channels,
+                    adBudgets,
+                    money: state.money - cost,
+                    turn: 1,
+                    phase: 'ch4-opening',
+                });
+            },
 
-    // ━━ 広告管理 ━━
-    updateAdBudgets: (newBudgets) => {
-        set({ adBudgets: newBudgets, phase: 'ch4-dashboard' });
-    },
+            startGameplay: () => set({ phase: 'ch4-dashboard' }),
 
-    refreshCreative: () => {
-        const state = get();
-        if (state.money < CREATIVE_FRESHNESS.refreshCost) return;
-        set({
-            creativeFreshness: 1.0,
-            money: state.money - CREATIVE_FRESHNESS.refreshCost,
-        });
-    },
+            // ━━ 広告管理 ━━
+            updateAdBudgets: (newBudgets) => {
+                set({ adBudgets: newBudgets, phase: 'ch4-dashboard' });
+            },
 
-    openAdPanel: () => set({ phase: 'ch4-ads' }),
+            refreshCreative: () => {
+                const state = get();
+                if (state.money < CREATIVE_FRESHNESS.refreshCost) return;
+                set({
+                    creativeFreshness: 1.0,
+                    money: state.money - CREATIVE_FRESHNESS.refreshCost,
+                });
+            },
 
-    // ━━ CRM管理 ━━
-    enableCRM: (toolKey) => {
-        const state = get();
-        if (!CRM_TOOLS[toolKey]) return;
-        if (state.turn < CRM_TOOLS[toolKey].unlockTurn) return;
-        const newCRM = { ...state.crmEnabled, [toolKey]: true };
-        set({ crmEnabled: newCRM });
-    },
+            openAdPanel: () => set({ phase: 'ch4-ads' }),
 
-    disableCRM: (toolKey) => {
-        const state = get();
-        const newCRM = { ...state.crmEnabled, [toolKey]: false };
-        set({ crmEnabled: newCRM });
-    },
+            // ━━ CRM管理 ━━
+            enableCRM: (toolKey) => {
+                const state = get();
+                if (!CRM_TOOLS[toolKey]) return;
+                if (state.turn < CRM_TOOLS[toolKey].unlockTurn) return;
+                const newCRM = { ...state.crmEnabled, [toolKey]: true };
+                set({ crmEnabled: newCRM });
+            },
 
-    openCRMPanel: () => set({ phase: 'ch4-crm' }),
+            disableCRM: (toolKey) => {
+                const state = get();
+                const newCRM = { ...state.crmEnabled, [toolKey]: false };
+                set({ crmEnabled: newCRM });
+            },
 
-    // ━━ スタッフ管理 ━━
-    hireStaff: (key) => {
-        const state = get();
-        const template = CH4_STAFF[key];
-        if (!template) return;
-        if (state.staff.some(s => s.skill === key)) return;
-        const newStaff = [...state.staff, { id: `staff_${key}_${Date.now()}`, ...template }];
-        set({
-            staff: newStaff,
-            totalLaborCost: newStaff.reduce((s, st) => s + (CH4_STAFF[st.skill]?.monthly || 0), 0),
-        });
-    },
+            openCRMPanel: () => set({ phase: 'ch4-crm' }),
 
-    fireStaff: (id) => {
-        const state = get();
-        const newStaff = state.staff.filter(s => s.id !== id);
-        set({
-            staff: newStaff,
-            totalLaborCost: newStaff.reduce((s, st) => s + (CH4_STAFF[st.skill]?.monthly || 0), 0),
-        });
-    },
+            // ━━ スタッフ管理 ━━
+            hireStaff: (key) => {
+                const state = get();
+                const template = CH4_STAFF[key];
+                if (!template) return;
+                if (state.staff.some(s => s.skill === key)) return;
+                const newStaff = [...state.staff, { id: `staff_${key}_${Date.now()}`, ...template }];
+                set({
+                    staff: newStaff,
+                    totalLaborCost: newStaff.reduce((s, st) => s + (CH4_STAFF[st.skill]?.monthly || 0), 0),
+                });
+            },
 
-    // ━━ 週次確定 ━━
-    confirmWeek: () => {
-        const state = get();
-        const result = simulateECWeek(state);
+            fireStaff: (id) => {
+                const state = get();
+                const newStaff = state.staff.filter(s => s.id !== id);
+                set({
+                    staff: newStaff,
+                    totalLaborCost: newStaff.reduce((s, st) => s + (CH4_STAFF[st.skill]?.monthly || 0), 0),
+                });
+            },
 
-        // ゲームオーバー判定（資金ゼロ以下）
-        if (result.money < 0) {
-            const exitData = calculateExitValue({ ...state, ...result });
-            const skills = evaluateCh4Skills({ ...state, ...result });
-            set({
-                ...result,
-                ...exitData,
-                skills,
-                exitType: 'bankruptcy',
-                exitAmount: 0,
-                phase: 'ch4-report',
-            });
-            return;
-        }
+            // ━━ 週次確定 ━━
+            confirmWeek: () => {
+                const state = get();
+                const result = simulateECWeek(state);
 
-        set({
-            ...result,
-            phase: 'ch4-results',
-        });
-    },
+                // ゲームオーバー判定（資金ゼロ以下）
+                if (result.money < 0) {
+                    const exitData = calculateExitValue({ ...state, ...result });
+                    const skills = evaluateCh4Skills({ ...state, ...result });
+                    set({
+                        ...result,
+                        ...exitData,
+                        skills,
+                        exitType: 'bankruptcy',
+                        exitAmount: 0,
+                        phase: 'ch4-report',
+                    });
+                    return;
+                }
 
-    // ━━ 次ターン ━━
-    nextTurn: () => {
-        const state = get();
-        const nextTurn = state.turn + 1;
-        const updates = { turn: nextTurn, currentEvent: null, eventResult: null };
+                set({
+                    ...result,
+                    profitHistory: [...state.profitHistory, {
+                        turn: state.turn,
+                        sales: result.weeklySales,
+                        profit: result.weeklyProfit,
+                        orders: result.weeklyOrders,
+                    }],
+                    _goalOrganicAchieved: state._goalOrganicAchieved || (result.organicRatio || 0) >= 0.40,
+                    phase: 'ch4-results',
+                });
+            },
 
-        // ゲーム終了（Turn 76以降）
-        if (nextTurn > 76) {
-            const exitData = calculateExitValue(state);
-            set({ ...updates, ...exitData, phase: 'ch4-exit', exitAvailable: true });
-            return;
-        }
+            // ━━ 次ターン ━━
+            nextTurn: () => {
+                const state = get();
+                const nextTurn = state.turn + 1;
+                const updates = { turn: nextTurn, currentEvent: null, eventResult: null };
 
-        // イベント判定
-        const event = getCh4EventForTurn(nextTurn, { ...state, turn: nextTurn });
-        if (event) {
-            updates.currentEvent = event;
-            updates.phase = 'ch4-event';
-            if (event._kenjiCh4Stage) updates.kenjiCh4Stage = event._kenjiCh4Stage;
-            if (event.id) updates._triggeredEvents = [...(state._triggeredEvents || []), event.id];
-        } else {
-            updates.phase = 'ch4-dashboard';
-        }
+                // ゲーム終了（Turn 76以降）
+                if (nextTurn > 76) {
+                    const exitData = calculateExitValue(state);
+                    set({ ...updates, ...exitData, phase: 'ch4-exit', exitAvailable: true });
+                    return;
+                }
 
-        // Phase boundary save
-        const prevPhase = getCh4Phase(state.turn);
-        const newPhase = getCh4Phase(nextTurn);
-        if (prevPhase !== newPhase) {
-            updates.savePoints = { ...(state.savePoints || {}), [prevPhase]: { turn: state.turn, money: state.money } };
-        }
+                // イベント判定
+                const event = getCh4EventForTurn(nextTurn, { ...state, turn: nextTurn });
+                if (event) {
+                    updates.currentEvent = event;
+                    updates.phase = 'ch4-event';
+                    if (event._kenjiCh4Stage) updates.kenjiCh4Stage = event._kenjiCh4Stage;
+                    if (event.id) updates._triggeredEvents = [...(state._triggeredEvents || []), event.id];
+                } else {
+                    updates.phase = 'ch4-dashboard';
+                }
 
-        set(updates);
-    },
+                // Phase boundary save
+                const prevPhase = getCh4Phase(state.turn);
+                const newPhase = getCh4Phase(nextTurn);
+                if (prevPhase !== newPhase) {
+                    updates.savePoints = { ...(state.savePoints || {}), [prevPhase]: { turn: state.turn, money: state.money } };
+                }
 
-    // ━━ イベント処理 ━━
-    dismissEvent: (effect) => {
-        const state = get();
-        const hasResponse = !!(effect?.response);
-        const updates = {};
+                set(updates);
+            },
 
-        // responseがあれば結果テキストを表示して留まる
-        if (hasResponse) {
-            updates.eventResult = effect.response;
-        }
+            // ━━ イベント処理 ━━
+            dismissEvent: (effect) => {
+                const state = get();
+                const hasResponse = !!(effect?.response);
+                const updates = {};
 
-        // effectがない or 空のオブジェクトの場合 → ダッシュボードへ
-        if (!effect || Object.keys(effect).length === 0) {
-            set({ currentEvent: null, eventResult: null, phase: 'ch4-dashboard' });
-            return;
-        }
+                // responseがあれば結果テキストを表示して留まる
+                if (hasResponse) {
+                    updates.eventResult = effect.response;
+                }
 
-        for (const key in effect) {
-            if (key === 'response') continue;
-            switch (key) {
-                case 'money':
-                    updates.money = (state.money || 0) + effect.money;
-                    break;
-                case 'reputation':
-                    updates.reputation = Math.min(5.0, Math.max(0, (state.reputation || 3.5) + effect.reputation));
-                    break;
-                case 'repeatBoost':
-                    updates.repeatBoost = (state.repeatBoost || 0) + effect.repeatBoost;
-                    break;
-                case 'bonusCustomers':
-                    updates.bonusCustomersThisWeek = (state.bonusCustomersThisWeek || 0) + effect.bonusCustomers;
-                    break;
-                case 'organicBoost':
-                    updates.organicRatio = Math.min(1, (state.organicRatio || 0) + effect.organicBoost);
-                    break;
-                case 'consultIncome':
-                    updates.consultIncome = effect.consultIncome;
-                    break;
-                case 'incorporateStart':
-                    updates.isIncorporated = true;
-                    break;
-                case 'consumptionTaxEnabled':
-                    updates.consumptionTaxEnabled = true;
-                    break;
-                case 'monthlyTax':
-                    updates.monthlyTax = effect.monthlyTax;
-                    break;
-                case 'influencerHired':
-                    updates.influencerHired = effect.influencerHired;
-                    break;
-                case 'wholesaleEnabled':
-                    updates.wholesaleEnabled = true;
-                    break;
-                case 'adStopTest':
-                    updates.adStopTest = true;
-                    break;
-                case 'adStopDeclined':
-                    updates.adStopDeclined = true;
-                    break;
-                case 'channelRemove':
-                    updates.channels = (state.channels || []).filter(c => c === 'own_ec');
-                    break;
-                case 'productUpgrade':
-                    updates.productUpgrade = true;
-                    break;
-                case 'priceOverride':
-                    updates.priceOverride = effect.priceOverride;
-                    updates.priceOverrideExpiry = state.turn + 4;
-                    break;
-                case 'internationalEnabled':
-                    updates.internationalEnabled = true;
-                    break;
-                case 'adEfficiencyBoost':
-                    updates.repeatBoost = (state.repeatBoost || 0) + effect.adEfficiencyBoost;
-                    break;
-                default:
-                    updates[key] = effect[key];
-                    break;
-            }
-        }
+                // effectがない or 空のオブジェクトの場合 → ダッシュボードへ
+                if (!effect || Object.keys(effect).length === 0) {
+                    set({ currentEvent: null, eventResult: null, phase: 'ch4-dashboard' });
+                    return;
+                }
 
-        // responseがない場合は即座にダッシュボードへ
-        if (!hasResponse) {
-            updates.currentEvent = null;
-            updates.phase = 'ch4-dashboard';
-        }
+                for (const key in effect) {
+                    if (key === 'response') continue;
+                    switch (key) {
+                        case 'money':
+                            updates.money = (state.money || 0) + effect.money;
+                            break;
+                        case 'reputation':
+                            updates.reputation = Math.min(5.0, Math.max(0, (state.reputation || 3.5) + effect.reputation));
+                            break;
+                        case 'repeatBoost':
+                            updates.repeatBoost = (state.repeatBoost || 0) + effect.repeatBoost;
+                            break;
+                        case 'bonusCustomers':
+                            updates.bonusCustomersThisWeek = (state.bonusCustomersThisWeek || 0) + effect.bonusCustomers;
+                            break;
+                        case 'organicBoost':
+                            updates.organicRatio = Math.min(1, (state.organicRatio || 0) + effect.organicBoost);
+                            break;
+                        case 'consultIncome':
+                            updates.consultIncome = effect.consultIncome;
+                            break;
+                        case 'incorporateStart':
+                            updates.isIncorporated = true;
+                            break;
+                        case 'consumptionTaxEnabled':
+                            updates.consumptionTaxEnabled = true;
+                            break;
+                        case 'monthlyTax':
+                            updates.monthlyTax = effect.monthlyTax;
+                            break;
+                        case 'influencerHired':
+                            updates.influencerHired = effect.influencerHired;
+                            break;
+                        case 'wholesaleEnabled':
+                            updates.wholesaleEnabled = true;
+                            break;
+                        case 'adStopTest':
+                            updates.adStopTest = true;
+                            break;
+                        case 'adStopDeclined':
+                            updates.adStopDeclined = true;
+                            break;
+                        case 'channelRemove':
+                            updates.channels = (state.channels || []).filter(c => c === 'own_ec');
+                            break;
+                        case 'productUpgrade':
+                            updates.productUpgrade = true;
+                            break;
+                        case 'priceOverride':
+                            updates.priceOverride = effect.priceOverride;
+                            updates.priceOverrideExpiry = state.turn + 4;
+                            break;
+                        case 'internationalEnabled':
+                            updates.internationalEnabled = true;
+                            break;
+                        case 'adEfficiencyBoost':
+                            updates.repeatBoost = (state.repeatBoost || 0) + effect.adEfficiencyBoost;
+                            break;
+                        case 'subscriptionEnabled':
+                            updates.crmEnabled = { ...(state.crmEnabled || {}), subscription: true };
+                            break;
+                        default:
+                            updates[key] = effect[key];
+                            break;
+                    }
+                }
 
-        set(updates);
-    },
+                // responseがない場合は即座にダッシュボードへ
+                if (!hasResponse) {
+                    updates.currentEvent = null;
+                    updates.phase = 'ch4-dashboard';
+                }
 
-    clearEventResult: () => set({ currentEvent: null, eventResult: null, phase: 'ch4-dashboard' }),
+                set(updates);
+            },
 
-    // ━━ EXIT ━━
-    selectExit: (type) => {
-        const state = get();
-        const exitData = calculateExitValue(state);
-        let exitAmount = 0;
+            clearEventResult: () => set({ currentEvent: null, eventResult: null, phase: 'ch4-dashboard' }),
 
-        if (type === 'mna') {
-            exitAmount = Math.round(exitData.enterpriseValue * 0.70);
-        } else if (type === 'ipo') {
-            exitAmount = Math.round(exitData.enterpriseValue * 0.30);
-        } else {
-            exitAmount = Math.round(state.money * 0.8);
-        }
+            // ━━ EXIT ━━
+            selectExit: (type) => {
+                const state = get();
+                const exitData = calculateExitValue(state);
+                let exitAmount = 0;
 
-        const skills = evaluateCh4Skills(state);
+                if (type === 'mna') {
+                    exitAmount = Math.round(exitData.enterpriseValue * 0.70);
+                } else if (type === 'ipo') {
+                    exitAmount = Math.round(exitData.enterpriseValue * 0.30);
+                } else {
+                    exitAmount = Math.round(state.money * 0.8);
+                }
 
-        set({
-            exitType: type,
-            exitAmount,
-            ...exitData,
-            skills,
-            money: state.money + exitAmount,
-            phase: 'ch4-report',
-        });
-    },
+                const skills = evaluateCh4Skills(state);
 
-    getExitPreview: () => {
-        const state = get();
-        return calculateExitValue(state);
-    },
+                set({
+                    exitType: type,
+                    exitAmount,
+                    ...exitData,
+                    skills,
+                    money: state.money + exitAmount,
+                    phase: 'ch4-report',
+                });
+            },
 
-    // ━━ ダッシュボードに戻る ━━
-    backToDashboard: () => set({ phase: 'ch4-dashboard' }),
-}));
+            getExitPreview: () => {
+                const state = get();
+                return calculateExitValue(state);
+            },
+
+            // ━━ ダッシュボードに戻る ━━
+            backToDashboard: () => set({ phase: 'ch4-dashboard' }),
+        }),
+        { name: 'antigravity-ch4' }
+    )
+);
 
 export default useECStore;

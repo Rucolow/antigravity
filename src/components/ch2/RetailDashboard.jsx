@@ -1,6 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRetailStore } from '../../store/retailEngine';
 import { LOCATIONS, INDUSTRIES, getCh2Phase, CH2_PHASES } from '../../data/ch2Constants';
+import GoalBar from '../GoalBar';
+import AdvisorBar from '../AdvisorBar';
+import WeeklyFocusBar from '../WeeklyFocusBar';
+import { CH2_GOAL } from '../../data/chapterGoals';
+import { getWeeklyFocusCards } from '../../data/weeklyFocusCards';
 
 const WEATHER_ICON = { sunny: '☀️', cloudy: '☁️', rainy: '🌧️', stormy: '⛈️' };
 const STATUS_LABEL = { hot: '🔥売れ筋', normal: '✅通常', slow: '⚠️低回転', dead: '💀死に筋', stockout: '🚫品切れ' };
@@ -15,6 +20,7 @@ export default function RetailDashboard() {
     const phaseInfo = CH2_PHASES[ch2Phase];
 
     const isSimulating = state.phase === 'ch2-simulating';
+    const [selectedFocus, setSelectedFocus] = useState(state._lastFocus || null);
 
     // 在庫評価額
     const inventoryValue = state.skus.reduce((sum, sku) => sum + sku.stock * sku.cost, 0);
@@ -32,6 +38,11 @@ export default function RetailDashboard() {
                     Week {state.turn} · {phaseInfo?.label || '---'}
                 </div>
             </div>
+
+            {/* チャプターゴール */}
+            <GoalBar goal={CH2_GOAL} state={state} />
+            <AdvisorBar chapter={2} state={state} />
+            <WeeklyFocusBar cards={getWeeklyFocusCards(2)} selected={selectedFocus} onSelect={setSelectedFocus} />
 
             {/* KPI カード行 */}
             <div className="ch2-kpi-row">
@@ -161,12 +172,30 @@ export default function RetailDashboard() {
 
             {/* アクションボタン */}
             <div className="ch2-actions">
+                {state.turn >= 10 && (
+                    <button
+                        onClick={() => useRetailStore.setState({ autoMode: !state.autoMode })}
+                        style={{
+                            width: '100%', padding: '8px', borderRadius: 8, border: '1px solid var(--ch2-accent, #2563eb)',
+                            background: state.autoMode ? 'var(--ch2-accent, #2563eb)' : 'transparent',
+                            color: state.autoMode ? '#fff' : 'var(--ch2-accent, #2563eb)',
+                            fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', marginBottom: 8,
+                        }}
+                    >
+                        ⚡ オート {state.autoMode ? 'ON' : 'OFF'}
+                    </button>
+                )}
                 <button
                     className="ch2-actions__go"
-                    onClick={() => confirmWeek({})}
-                    disabled={isSimulating}
+                    onClick={() => {
+                        const card = getWeeklyFocusCards(2).find(c => c.id === selectedFocus);
+                        confirmWeek({ _focus: card ? card.apply() : {} });
+                        useRetailStore.setState({ _lastFocus: selectedFocus });
+                        setSelectedFocus(null);
+                    }}
+                    disabled={isSimulating || !selectedFocus}
                 >
-                    {isSimulating ? '計算中…' : '次の週へ →'}
+                    {isSimulating ? '計算中…' : !selectedFocus ? '⚡ 判断を選んでください' : '次の週へ →'}
                 </button>
             </div>
 

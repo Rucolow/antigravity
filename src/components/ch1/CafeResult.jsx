@@ -1,9 +1,12 @@
 import React from 'react';
 import { useCafeStore } from '../../store/cafeEngine';
+import { useAutoAdvance } from '../../hooks/useAutoAdvance';
+import { detectBehaviorMilestone } from '../../data/behaviorMilestones';
 
 export default function CafeResult() {
     const state = useCafeStore(s => s);
     const nextTurn = useCafeStore(s => s.nextTurn);
+    const autoMode = useCafeStore(s => s.autoMode);
     const result = state.weekResult;
 
     if (!result) return null;
@@ -14,6 +17,15 @@ export default function CafeResult() {
     // マイルストーン検出
     const newMilestones = state.milestonesHit.filter(m => m.turn === state.turn);
     const isFirstBlack = newMilestones.some(m => m.type === 'first_black');
+
+    // 行動変化マイルストーン
+    const behaviorMs = detectBehaviorMilestone(1, state, result);
+    if (behaviorMs && !(state._behaviorMilestones || []).includes(behaviorMs.id)) {
+        useCafeStore.setState({ _behaviorMilestones: [...(state._behaviorMilestones || []), behaviorMs.id] });
+    }
+
+    // autoMode: マイルストーンなし時のみ自動進行
+    useAutoAdvance(autoMode && !isFirstBlack && newMilestones.length === 0 && !behaviorMs, nextTurn);
 
     return (
         <div className="ch1-result">
@@ -31,6 +43,17 @@ export default function CafeResult() {
                         ようやく黒字に変わった。</p>
                     <p>この¥{result.netProfit.toLocaleString()}は、バイト時代の同額とは全く違う重み。<br />
                         自分の判断で、自分の店で、自分が生み出した利益だ。</p>
+                </div>
+            )}
+
+            {/* 行動変化マイルストーン */}
+            {behaviorMs && (
+                <div className="ch1-milestone">
+                    <div className="ch1-milestone__icon">{behaviorMs.icon}</div>
+                    <h3>{behaviorMs.title}</h3>
+                    {behaviorMs.text.split('\n').map((line, i) => (
+                        <p key={i}>{line}</p>
+                    ))}
                 </div>
             )}
 
@@ -70,6 +93,29 @@ export default function CafeResult() {
                     <span>{isBlack ? '+' : ''}¥{result.netProfit.toLocaleString()}</span>
                 </div>
             </div>
+
+            {/* 前週比較 */}
+            {state.profitHistory.length >= 2 && (() => {
+                const prev = state.profitHistory[state.profitHistory.length - 2];
+                const diffs = [
+                    { label: '売上', diff: result.sales - prev.sales },
+                    { label: '利益', diff: result.netProfit - prev.profit },
+                    { label: '来客', diff: result.customers - prev.customers, unit: '人' },
+                ];
+                return (
+                    <div className="ch1-result__pl" style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.02)' }}>
+                        <div style={{ fontSize: '0.62rem', color: '#8b7355', marginBottom: 4 }}>前週比</div>
+                        {diffs.map((d, i) => (
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', padding: '2px 0' }}>
+                                <span style={{ color: '#8b7355' }}>{d.label}</span>
+                                <span style={{ fontWeight: 600, color: d.diff > 0 ? '#34d399' : d.diff < 0 ? '#ef4444' : '#8b7355' }}>
+                                    {d.diff > 0 ? '↑' : d.diff < 0 ? '↓' : '→'} {d.diff >= 0 ? '+' : ''}{d.unit ? d.diff : `¥${d.diff.toLocaleString()}`}{d.unit || ''}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                );
+            })()}
 
             {/* 損益分岐点 */}
             <div className="ch1-result__breakeven">

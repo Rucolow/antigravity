@@ -424,7 +424,30 @@ export function createCh4TaxEvent(state) {
 export function getCh4EventForTurn(turn, state) {
     const triggered = state._triggeredEvents || [];
 
-    // ケンジアーク
+    // ── 優先順位1: アヤ合流（固定・確定発火） ──
+    if (turn >= 1 && turn <= 3 && state.ayaFromCh3 && !state.ayaJoined && !triggered.includes('aya_cs_start')) {
+        return {
+            id: 'aya_cs_start',
+            type: 'character',
+            title: 'アヤ、CSを担当する',
+            text: `アヤさん「ネットのお客さん、顔が見えないけど、\nメールの向こうには人がいる。\nカスタマーサポート、私に任せてください。」\n→ アヤの丁寧な対応がレビュー評価+0.3に貢献。`,
+            effect: { reputation: 0.3, ayaJoined: true },
+        };
+    }
+
+    // ── 優先順位2: 消費税イベント（条件付き固定・重要） ──
+    if (turn >= 28 && !triggered.includes('consumption_tax_ec')) {
+        const taxEvent = createCh4TaxEvent(state);
+        if (taxEvent) return taxEvent;
+    }
+
+    // ── 優先順位3: 法人化イベント（条件付き固定・重要） ──
+    if (turn >= 35 && !triggered.includes('incorporation')) {
+        const incEvent = createIncorporationEvent(state);
+        if (incEvent) return incEvent;
+    }
+
+    // ── 優先順位4: ケンジアーク（stage順序制御付き） ──
     const nextKenjiStage = (state.kenjiCh4Stage || 0) + 1;
     const kenjiEvent = KENJI_CH4_ARC.find(k =>
         k.stage === nextKenjiStage &&
@@ -439,7 +462,7 @@ export function getCh4EventForTurn(turn, state) {
         };
     }
 
-    // 必須イベント（広告停止テスト）
+    // ── 優先順位5: 必須イベント（広告停止テスト） ──
     const requiredEvent = TURNING_POINT_EVENTS.find(e =>
         e.required &&
         !triggered.includes(e.id) &&
@@ -451,7 +474,61 @@ export function getCh4EventForTurn(turn, state) {
         }
     }
 
-    // 転換点イベント
+    // ── 優先順位5.5: フォースドチョイス（中盤の経営判断を強制） ──
+    const forcedChoices = [
+        {
+            id: 'forced_ad_strategy',
+            turn: 20,
+            type: 'turning_point',
+            title: '広告戦略の転換点',
+            text: `広告費が毎週重い。CAC（顧客獲得コスト）が高止まりしている。\n\n「広告で客を買い続けるか、ブランドで客が来る仕組みを作るか」\nD2Cの本質的な分岐点。`,
+            choices: [
+                {
+                    label: 'SNS・コンテンツに投資（短期売上↓、長期オーガニック↑）',
+                    response: '広告予算の一部をコンテンツ制作に回した。すぐには効果が出ないが、検索流入が徐々に増え始めた。',
+                    effect: { reputation: 0.15 },
+                },
+                {
+                    label: 'インフルエンサー施策（一時的な爆発力）',
+                    response: 'インフルエンサーに商品を送った。一時的に注文が急増！ただし定着するかは不明。「バズは一過性」を体感。',
+                    effect: { money: -50000, reputation: 0.15, bonusCustomersThisWeek: 30 },
+                },
+                {
+                    label: '広告最適化に集中（CPA改善）',
+                    response: '広告のターゲティングを絞り込んだ。CACが改善。「広告を止められない」構造は変わらないが、効率は上がった。',
+                    effect: { reputation: 0.1 },
+                },
+            ],
+        },
+        {
+            id: 'forced_subscription',
+            turn: 30,
+            type: 'turning_point',
+            title: 'サブスク導入の判断',
+            text: `リピーターが増えてきた。\n「定期購入（サブスク）を導入しては？」とチームから提案。\n\nLTVを上げる最強の武器——だが、解約率との戦いでもある。`,
+            choices: [
+                {
+                    label: '月額サブスクを導入（10%引き、安定収益）',
+                    response: 'サブスクを開始！初月から50人が加入。安定収益の基盤ができた。ただし解約防止の仕組みが必要に。',
+                    effect: { reputation: 0.15, money: 50000, subscriberCount: 50, subscriptionEnabled: true },
+                },
+                {
+                    label: '頒布会（3ヶ月限定セット）',
+                    response: '期間限定の頒布会を開催。「限定感」でリピート率が上がった。サブスクほどの安定性はないが、解約リスクも低い。',
+                    effect: { reputation: 0.15 },
+                },
+                {
+                    label: '見送り（単品販売に集中）',
+                    response: '今はまだ早いと判断。「サブスクは仕組み作りが大変。まず単品で利益を出してから」。',
+                    effect: {},
+                },
+            ],
+        },
+    ];
+    const forcedHit = forcedChoices.find(f => turn === f.turn && !triggered.includes(f.id));
+    if (forcedHit) return forcedHit;
+
+    // ── 優先順位6: 転換点イベント（Phase B/C、確率25%） ──
     const phase = getCh4Phase(turn);
     if (phase === 'B' || phase === 'C') {
         const eligibleTP = TURNING_POINT_EVENTS.filter(e =>
@@ -465,14 +542,9 @@ export function getCh4EventForTurn(turn, state) {
         }
     }
 
-    // 法人化イベント
-    if (turn >= 35 && !triggered.includes('incorporation')) {
-        const incEvent = createIncorporationEvent(state);
-        if (incEvent) return incEvent;
-    }
-
-    // キャラクターイベント
+    // ── 優先順位7: キャラクターイベント（確率20%、アヤ以外） ──
     const eligibleChar = CHARACTER_EVENTS.filter(e =>
+        e.id !== 'aya_cs_start' &&   // アヤは優先順位1で処理済み
         !triggered.includes(e.id) &&
         turn >= e.turnRange[0] && turn <= e.turnRange[1] &&
         (!e.condition || e.condition(state))
@@ -481,20 +553,13 @@ export function getCh4EventForTurn(turn, state) {
         return eligibleChar[Math.floor(Math.random() * eligibleChar.length)];
     }
 
-    // カオスイベント
+    // ── 優先順位8: カオスイベント（確率12%） ──
     const eligibleChaos = CHAOS_EVENTS.filter(e =>
         !triggered.includes(e.id) &&
-        turn >= e.turnRange[0] && turn <= e.turnRange[1] &&
-        (!e.once || !triggered.includes(e.id))
+        turn >= e.turnRange[0] && turn <= e.turnRange[1]
     );
     if (eligibleChaos.length > 0 && Math.random() < 0.12) {
         return eligibleChaos[Math.floor(Math.random() * eligibleChaos.length)];
-    }
-
-    // 消費税イベント
-    if (turn >= 28 && !triggered.includes('consumption_tax_ec')) {
-        const taxEvent = createCh4TaxEvent(state);
-        if (taxEvent) return taxEvent;
     }
 
     return null;

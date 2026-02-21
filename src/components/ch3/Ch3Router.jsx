@@ -12,6 +12,7 @@ import Ch3EventDisplay from './Ch3EventDisplay';
 import PricingPanel from './PricingPanel';
 import HotelExitSelect from './HotelExitSelect';
 import Ch3Report from './Ch3Report';
+import Ch4Bridge from './Ch4Bridge';
 
 export default function Ch3Router() {
     const phase = useHotelStore(s => s.phase);
@@ -45,6 +46,8 @@ export default function Ch3Router() {
                 return <HotelExitSelect />;
             case 'ch3-report':
                 return <Ch3Report />;
+            case 'ch3-bridge':
+                return <Ch4Bridge />;
             default:
                 return (
                     <div className="ch3-container">

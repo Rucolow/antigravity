@@ -1,4 +1,5 @@
 import { useGameStore } from '../store/gameEngine';
+import { TARGET_MONEY } from '../data/constants';
 
 export default function Opening() {
     const startGame = useGameStore(s => s.startGame);
@@ -13,7 +14,7 @@ export default function Opening() {
             <div style={{ height: 32 }} />
 
             <p className="opening__text">
-                開業資金<span className="text-gold mono"> ¥500,000 </span>を貯めよう！
+                開業資金<span className="text-gold mono"> ¥{TARGET_MONEY.toLocaleString()} </span>を貯めよう！
             </p>
             <p className="opening__text" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                 バイトに副業、やれることは全部やる。

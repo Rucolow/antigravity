@@ -44,7 +44,7 @@ const INTERVIEW_QUESTIONS = [
     {
         question: '「月の売上見込みと、返済計画を教えてください。」',
         choices: [
-            { label: '損益分岐点から計算して、月商¥50万を3ヶ月で達成する計画です', score: 3, reaction: '面談官がペンを置いた。「しっかりした事業計画ですね。」' },
+            { label: '損益分岐点から計算して、月商¥30万を3ヶ月で達成する計画です', score: 3, reaction: '面談官がペンを置いた。「しっかりした事業計画ですね。」' },
             { label: '月¥40万くらいは売れると思います', score: 2, reaction: '面談官がメモした。「根拠をもう少し聞かせてください。」' },
             { label: '……頑張ります', score: 1, reaction: '面談官の表情が固くなった。「具体的な数字をお持ちですか？」' },
         ],
@@ -83,7 +83,7 @@ export default function Ending() {
     const dailyPayMap = { cafe: 8800, convenience: 10000, moving: 12000 };
     const basePay = dailyPayMap[baitoType] || 8800;
     const weeklyNet = basePay * 5 - 25750;
-    const baitoOnlyWeeks = weeklyNet > 0 ? Math.ceil(500000 / weeklyNet) : 999;
+    const baitoOnlyWeeks = weeklyNet > 0 ? Math.ceil(300000 / weeklyNet) : 999;
 
     const selectedTier = INVESTMENT_TIERS.find(t => t.amount === shouInvestment);
     const selfCapital = money + shouInvestment;
@@ -101,7 +101,7 @@ export default function Ending() {
                     <p>
                         最初はバイトだけ。<br />
                         日給¥{basePay.toLocaleString()}。手残りは週¥{weeklyNet.toLocaleString()}。<br />
-                        このペースなら¥50万まで<strong>{baitoOnlyWeeks}週——{Math.ceil(baitoOnlyWeeks / 4)}ヶ月</strong>。
+                        このペースなら¥30万まで<strong>{baitoOnlyWeeks}週——{Math.ceil(baitoOnlyWeeks / 4)}ヶ月</strong>。
                     </p>
                     <p>あなたは<strong>{turn}週</strong>でここに立っている。</p>
                     <p>

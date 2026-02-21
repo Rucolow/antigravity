@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useRetailStore } from '../../store/retailEngine';
 import Ch3Bridge from './Ch3Bridge';
+import { gradeCh2 } from '../../data/chapterGrade';
+import GradeDisplay from '../GradeDisplay';
 
 const SKILL_LABELS = {
     inventory_thinking: '📦 在庫思考',
@@ -34,6 +36,13 @@ export default function Ch2Report() {
     return (
         <div className="ch2-report">
             <h2>📋 Chapter 2 レポート</h2>
+
+            <GradeDisplay result={gradeCh2({
+                money: state.money,
+                exitAmount: state.exitAmount || 0,
+                skillCount: (state.ch2Skills || []).length,
+                turn: state.turn,
+            })} chapter={2} />
 
             {/* EXIT結果 */}
             <div className="ch2-report__section">
@@ -94,10 +103,16 @@ export default function Ch2Report() {
                 ))}
             </div>
 
+            <div style={{ margin: '16px 0 8px', padding: '12px', borderRadius: 8, background: 'rgba(37,99,235,0.08)', fontSize: '0.78rem', lineHeight: 1.7, color: 'var(--ch2-text)' }}>
+                <p style={{ margin: '0 0 6px', fontWeight: 600 }}>📘 次の挑戦</p>
+                <p style={{ margin: 0 }}>モノの仕入れ→売りを学んだ。次は「体験」を売るビジネス。</p>
+                <p style={{ margin: 0 }}>在庫管理で培ったCF感覚が、稼働率と単価のバランスに直結する。</p>
+            </div>
+
             <button
                 onClick={() => setShowBridge(true)}
                 style={{
-                    marginTop: 20, width: '100%', padding: '14px', borderRadius: '10px',
+                    marginTop: 8, width: '100%', padding: '14px', borderRadius: '10px',
                     border: 'none', background: 'linear-gradient(135deg, #2563eb, #4a9eff)',
                     color: '#fff', fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer',
                 }}

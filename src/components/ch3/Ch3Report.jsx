@@ -1,7 +1,7 @@
 import React from 'react';
 import { useHotelStore } from '../../store/hotelEngine';
-import { useGameStore } from '../../store/gameEngine';
-import { useECStore } from '../../store/ecEngine';
+import { gradeCh3 } from '../../data/chapterGrade';
+import GradeDisplay from '../GradeDisplay';
 
 const SKILL_LABELS = {
     occupancy_master: '🏨 稼働率マスター',
@@ -41,6 +41,13 @@ export default function Ch3Report() {
     return (
         <div className="ch3-container ch3-report">
             <h2 className="ch3-title">📋 Chapter 3 レポート</h2>
+
+            <GradeDisplay result={gradeCh3({
+                avgOcc,
+                avgRevPAR,
+                money: state.money,
+                skillCount: (state.ch3Skills || []).length,
+            })} chapter={3} />
 
             {/* EXIT結果 */}
             <div className="ch3-card ch3-report__section">
@@ -136,23 +143,16 @@ export default function Ch3Report() {
                 ))}
             </div>
 
+            <div className="ch3-card" style={{ marginTop: 12, padding: '12px 14px', fontSize: '0.78rem', lineHeight: 1.7 }}>
+                <p style={{ margin: '0 0 6px', fontWeight: 600 }}>📘 次の挑戦</p>
+                <p style={{ margin: 0 }}>リアル店舗の限界を感じた。デジタルで全国に届けたい。</p>
+                <p style={{ margin: 0 }}>RevPARで学んだ「単価×回転」の思考が、CACとLTVの最適化に変わる。</p>
+            </div>
+
             <button
                 className="ch3-action-btn"
-                onClick={() => {
-                    const hotelState = useHotelStore.getState();
-                    const initCh4 = useECStore.getState().initFromCh3;
-                    initCh4({
-                        money: hotelState.money,
-                        skills: hotelState.ch3Skills || [],
-                        allPreviousSkills: [
-                            ...(hotelState.ch1Skills || []),
-                            ...(hotelState.ch2Skills || []),
-                            ...(hotelState.ch3Skills || []),
-                        ],
-                    });
-                    useGameStore.setState({ chapter: 4 });
-                }}
-                style={{ width: '100%', marginTop: 16 }}
+                onClick={() => useHotelStore.setState({ phase: 'ch3-bridge' })}
+                style={{ width: '100%', marginTop: 8 }}
             >
                 Chapter 4「EC・D2C」へ進む →
             </button>

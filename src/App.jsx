@@ -62,6 +62,7 @@ export default function App() {
       const timer = setTimeout(() => {
         setDisplayedPhase(currentPhase);
         setVisible(true);
+        window.scrollTo(0, 0);
       }, 150);
       return () => clearTimeout(timer);
     }

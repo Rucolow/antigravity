@@ -1,6 +1,8 @@
 import React from 'react';
 import { useCafeStore } from '../../store/cafeEngine';
 import { LOCATIONS, INTERIORS, MACHINES, OPERATING_HOURS } from '../../data/ch1Constants';
+import { gradeCh1 } from '../../data/chapterGrade';
+import GradeDisplay from '../GradeDisplay';
 
 export default function Ch1Report() {
     const state = useCafeStore(s => s);
@@ -45,6 +47,14 @@ export default function Ch1Report() {
             <h2>Chapter 1 振り返りレポート</h2>
             <h3 className="ch1-report__cafe-name">{state.cafeName || 'My Cafe'} — {totalTurns}週間の記録</h3>
 
+            <GradeDisplay result={gradeCh1({
+                money: state.money,
+                initialInvestment: initialInvestment,
+                profitRate: parseFloat(profitRate),
+                reputation: state.reputation,
+                skillCount: learnedSkills.length,
+            })} chapter={1} />
+
             {/* サマリー */}
             <div className="ch1-report__section">
                 <h4>📋 店舗情報</h4>
@@ -78,7 +88,7 @@ export default function Ch1Report() {
             </div>
 
             {/* マイルストーン */}
-            {state.milestonesHit.length > 0 && (
+            {(state.milestonesHit && state.milestonesHit.length > 0) && (
                 <div className="ch1-report__section">
                     <h4>🏆 マイルストーン</h4>
                     {state.milestonesHit.map((m, i) => (

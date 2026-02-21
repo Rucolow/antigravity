@@ -1,5 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCafeStore } from '../../store/cafeEngine';
+import BenchmarkBar from '../BenchmarkBar';
+import GoalBar from '../GoalBar';
+import AdvisorBar from '../AdvisorBar';
+import WeeklyFocusBar from '../WeeklyFocusBar';
+import { CH1_GOAL } from '../../data/chapterGoals';
+import { getWeeklyFocusCards } from '../../data/weeklyFocusCards';
 import { LOCATIONS, OPERATING_HOURS, getCh1Phase, CH1_PHASES, MARKETING } from '../../data/ch1Constants';
 
 export default function CafeDashboard() {
@@ -15,6 +21,11 @@ export default function CafeDashboard() {
 
     const isSimulating = state.phase === 'ch1-simulating';
 
+    // WeeklyFocus
+    const focusCards = getWeeklyFocusCards(1);
+    const [selectedFocus, setSelectedFocus] = useState(state._lastFocus || null);
+    const canConfirm = !!selectedFocus;
+
     return (
         <div className="ch1-dash">
             {/* ヘッダー */}
@@ -24,6 +35,11 @@ export default function CafeDashboard() {
                     Week {state.turn} · {CH1_PHASES[ch1Phase]?.label}
                 </div>
             </div>
+
+            {/* チャプターゴール */}
+            <GoalBar goal={CH1_GOAL} state={state} />
+            <AdvisorBar chapter={1} state={state} />
+            <WeeklyFocusBar cards={focusCards} selected={selectedFocus} onSelect={setSelectedFocus} />
 
             {/* KPI カード行 */}
             <div className="ch1-kpi-row">
@@ -45,6 +61,16 @@ export default function CafeDashboard() {
                     </span>
                 </div>
             </div>
+
+            {/* 業界ベンチマーク */}
+            {state.turn >= 4 && (
+                <div style={{ padding: '8px 16px' }}>
+                    <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.1em' }}>業界平均との比較</div>
+                    <BenchmarkBar label="利益率" value={state.weeklySales > 0 ? Math.round((state.weeklyProfit / state.weeklySales) * 100) : 0} avg={15} max={40} unit="%" />
+                    <BenchmarkBar label="評判" value={state.reputation} avg={3.2} max={5} unit="" />
+                    <BenchmarkBar label="稼働率" value={Math.round(state.capacityUtilization * 100)} avg={65} max={100} unit="%" />
+                </div>
+            )}
 
             {/* 損益分岐点 */}
             <div className="ch1-breakeven">
@@ -130,12 +156,32 @@ export default function CafeDashboard() {
             <div className="ch1-actions">
                 <button
                     className="ch1-actions__go"
-                    onClick={() => confirmWeek({})}
-                    disabled={isSimulating}
+                    onClick={() => {
+                        const card = focusCards.find(c => c.id === selectedFocus);
+                        confirmWeek({ _focus: card ? card.apply() : {} });
+                        useCafeStore.setState({ _lastFocus: selectedFocus });
+                        setSelectedFocus(null);
+                    }}
+                    disabled={isSimulating || !canConfirm}
                 >
-                    {isSimulating ? '計算中…' : '次の週へ →'}
+                    {isSimulating ? '計算中…' : !canConfirm ? '⚡ 判断を選んでください' : '次の週へ →'}
                 </button>
             </div>
+
+            {/* オートモード（Turn10以降） */}
+            {state.turn >= 10 && (
+                <button
+                    onClick={() => useCafeStore.setState({ autoMode: !state.autoMode })}
+                    style={{
+                        width: '100%', padding: '8px', borderRadius: 8, border: '1px solid var(--ch1-accent)',
+                        background: state.autoMode ? 'var(--ch1-accent)' : 'transparent',
+                        color: state.autoMode ? '#fff' : 'var(--ch1-accent)',
+                        fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', marginBottom: 8,
+                    }}
+                >
+                    ⚡ オート {state.autoMode ? 'ON' : 'OFF'}
+                </button>
+            )}
 
             {/* EXIT可能 */}
             {state.exitAvailable && (

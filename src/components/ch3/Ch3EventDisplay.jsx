@@ -33,7 +33,11 @@ export default function Ch3EventDisplay() {
 
             <div className="ch3-event">
                 <div className="ch3-event__title">{event.title}</div>
-                <div className="ch3-event__text">{event.text}</div>
+                <div className="ch3-event__text">
+                    {(Array.isArray(event.text) ? event.text : (event.text || '').split('\n')).map((line, i) => (
+                        <p key={i} style={{ margin: '4px 0' }}>{line || '\u00A0'}</p>
+                    ))}
+                </div>
 
                 {/* キャラクター台詞 */}
                 {event.character && event.characterText && (
@@ -57,9 +61,14 @@ export default function Ch3EventDisplay() {
                         ))}
                     </div>
                 ) : (
-                    <button className="ch3-btn" onClick={() => dismissEvent()}>
-                        続ける →
-                    </button>
+                    <>
+                        <button className="ch3-btn" onClick={() => dismissEvent()}>
+                            続ける →
+                        </button>
+                        <button onClick={() => dismissEvent()} style={{ background: 'none', border: 'none', color: 'var(--ch3-text-sub, #6a7f99)', fontSize: '0.65rem', cursor: 'pointer', marginTop: 6, opacity: 0.5, width: '100%' }}>
+                            スキップ ▸
+                        </button>
+                    </>
                 )}
             </div>
         </div>

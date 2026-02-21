@@ -192,6 +192,33 @@ LTV比率が上限に近づいており、追加借入の余地がない。`,
         ],
         effect: {},
     },
+    // ── フォースドチョイス ──
+    {
+        id: 'forced_portfolio_strategy',
+        turn: { min: 24, max: 24 },
+        trigger: (s) => s.turn === 24 && s.properties.length >= 1,
+        title: 'ポートフォリオ戦略の転換点',
+        text: `2年目に突入。物件運営が安定してきた。\n\nここからどう拡大するかが、不動産投資家としての分岐点。\n「速さ」を取るか「安全」を取るか。`,
+        choices: [
+            { label: 'レバレッジを効かせて追加物件を狙う', effect: { money: -500000, reputation: 0.15, resultText: 'レバレッジ拡大でスピード重視。DSCR管理がより重要に。攻めの姿勢が吉と出るか。' } },
+            { label: 'CF蓄積を優先（自己資金を貯める）', effect: { money: 200000, resultText: '堅実路線を選択。現金比率を高め、次の好機を待つ。' } },
+            { label: '今の物件のバリューアップに集中', effect: { reputation: 0.2, resultText: '既存物件の価値向上に注力。家賃アップと空室率改善を目指す。' } },
+        ],
+        effect: {},
+    },
+    {
+        id: 'forced_exit_planning',
+        turn: { min: 48, max: 48 },
+        trigger: (s) => s.turn === 48 && s.properties.length >= 1,
+        title: '出口戦略の検討',
+        text: `4年目。不動産市場が活況で、物件価格が上昇中。\n\n「今売れば利益が出る」——だが、CF収入も捨てがたい。\n\n投資家として最も難しい判断——\n「いつ降りるか」を考えるとき。`,
+        choices: [
+            { label: '1棟売却して利益確定', effect: { money: 5000000, resultText: '1棟を売却。キャピタルゲインを確定した。ポートフォリオは縮小するが、現金は大幅に増えた。' } },
+            { label: '全保有で長期ホールド', effect: { reputation: 0.15, resultText: '売却せず保有を続ける。CFの積み上げを優先。「時間が味方」の戦略。' } },
+            { label: '借り換えでCFを改善', effect: { money: -200000, resultText: '既存ローンを借り換え。手数料はかかるが、月々の返済額が軽くなった。' } },
+        ],
+        effect: {},
+    },
 ];
 
 /* ===== キャラクターイベント ===== */
@@ -233,7 +260,7 @@ const CHARACTER_EVENTS = [
     {
         id: 'aya_property_manager',
         turn: { min: 1, max: 3 },
-        trigger: (s) => s.turn >= 1 && !s._triggeredEvents.includes('aya_property_manager'),
+        trigger: (s) => s.ayaFromCh4 && s.turn >= 1 && !s._triggeredEvents.includes('aya_property_manager'),
         title: 'アヤ、物件管理の右腕に',
         character: 'アヤ',
         text: `アヤさん「不動産、初めてですけど、
@@ -245,7 +272,7 @@ const CHARACTER_EVENTS = [
     {
         id: 'aya_retention',
         turn: { min: 15, max: 20 },
-        trigger: (s) => s.turn >= 15 && !s._triggeredEvents.includes('aya_retention'),
+        trigger: (s) => s.ayaFromCh4 && s.turn >= 15 && !s._triggeredEvents.includes('aya_retention'),
         title: 'アヤの退去防止力',
         character: 'アヤ',
         text: `202号室のテナントから、ため息混じりの一言。
@@ -304,7 +331,7 @@ const CHARACTER_EVENTS = [
     {
         id: 'aya_confession',
         turn: { min: 72, max: 80 },
-        trigger: (s) => s.turn >= 72 && !s._triggeredEvents.includes('aya_confession'),
+        trigger: (s) => s.ayaFromCh4 && s.turn >= 72 && !s._triggeredEvents.includes('aya_confession'),
         title: 'アヤの告白',
         character: 'アヤ',
         text: `アヤ「社長……ひとつ聞いてもいいですか。
@@ -513,24 +540,47 @@ export function pickCh5Event(state) {
 
     if (candidates.length === 0) return null;
 
-    // 優先度: ケンジアーク > マイルストーン > 転機 > キャラ > カオス
+    // ── 優先順位1: アヤ合流（確定発火） ──
+    const aya = candidates.find(e => e.id === 'aya_property_manager');
+    if (aya) return aya;
+
+    // ── 優先順位2: ショウの授業（確定発火。ストーリー必須） ──
+    const shou = candidates.find(e => e.id === 'shou_last_lesson' || e.id === 'shou_antigravity');
+    if (shou) return shou;
+
+    // ── 優先順位3: ケンジアーク ──
     const kenji = candidates.filter(e => e.id.startsWith('kenji_'));
     if (kenji.length > 0) return kenji[0];
 
+    // ── 優先順位4: マイルストーン（B/S初登場、総資産1億、減価償却警告） ──
     const milestones = candidates.filter(e => MILESTONE_EVENTS.some(m => m.id === e.id));
     if (milestones.length > 0) return milestones[0];
 
+    // ── 優先順位5: 転機イベント（退去、金利上昇、修繕 etc.） ──
     const pivots = candidates.filter(e => PIVOT_EVENTS.some(p => p.id === e.id));
     if (pivots.length > 0) return pivots[0];
 
-    // 確率判定付きイベント
+    // ── 優先順位6: 確定キャラクターイベント（確率フィルタなし） ──
+    const charEvents = candidates.filter(e =>
+        CHARACTER_EVENTS.some(c => c.id === e.id) &&
+        e.id !== 'aya_property_manager'   // アヤは優先順位1で処理済み
+    );
+    if (charEvents.length > 0) return charEvents[0];
+
+    // ── 優先順位7: カオス・人間関係（確率判定付き） ──
     const probabilistic = candidates.filter(e => e.probability);
     for (const e of probabilistic) {
         if (Math.random() < e.probability) return e;
     }
 
-    // 残りからランダム
-    const remaining = candidates.filter(e => !e.probability);
+    // ── 優先順位8: その他の残り ──
+    const remaining = candidates.filter(e =>
+        !e.probability &&
+        !e.id.startsWith('kenji_') &&
+        !MILESTONE_EVENTS.some(m => m.id === e.id) &&
+        !PIVOT_EVENTS.some(p => p.id === e.id) &&
+        !CHARACTER_EVENTS.some(c => c.id === e.id)
+    );
     if (remaining.length > 0) return remaining[Math.floor(Math.random() * remaining.length)];
 
     return null;

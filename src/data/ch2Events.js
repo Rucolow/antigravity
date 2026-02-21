@@ -156,6 +156,129 @@ const TURNING_POINT_EVENTS = [
             },
         ],
     },
+    {
+        id: 'shoplifting_incident',
+        type: 'turning_point',
+        turnRange: [15, 30],
+        title: '万引き被害が発覚',
+        text: `棚卸しで商品の数が合わない。\n調べると、どうやら万引き被害が発生していた。\n推定被害額¥50,000。\n\n対策を講じるか？`,
+        choices: [
+            {
+                label: '防犯カメラを設置（¥150,000）',
+                effect: { money: -150000, reputation: 0.1 },
+                response: '防犯カメラを導入。万引きは激減した。「ロス率」の重要性を学んだ。',
+            },
+            {
+                label: 'スタッフの目視で対応',
+                effect: { reputation: 0.05 },
+                response: 'スタッフの配置を変えて目視を強化。コストはかからないが、完全には防げない。',
+            },
+        ],
+    },
+    {
+        id: 'rival_store_opens',
+        type: 'turning_point',
+        turnRange: [22, 28],
+        title: '近所に競合店がオープン',
+        text: `徒歩圈内に似た業態の店がオープンした。\n大手チェーンで、価格はうちより10%安い。\n\nどう差別化する？`,
+        choices: [
+            {
+                label: '接客品質で勝負（研修費¥80,000）',
+                effect: { money: -80000, reputation: 0.2 },
+                response: '接客研修を実施。「大手にはない温かさ」が原動力に。常連客の離反を防いだ。',
+            },
+            {
+                label: '品揃えを独自路線にシフト',
+                effect: { money: -50000, reputation: 0.15 },
+                response: '大手にはないニッチ商品を強化。「ここでしか買えない」が武器に。',
+            },
+            {
+                label: '値下げで対抗（利益率↓）',
+                effect: { money: 20000, reputation: -0.1 },
+                response: '価格競争に踏み切った。客は保てたが、利益率が圧迫される。',
+            },
+        ],
+    },
+    {
+        id: 'local_event_collab',
+        type: 'turning_point',
+        turnRange: [30, 38],
+        title: '地域イベントへの出店提案',
+        text: `商店街のお祭りに出店しないかと誘われた。\n出店料¥30,000だが、宣伝効果は大きい。\n\n新規客獲得のチャンス——だが準備が大変。`,
+        choices: [
+            {
+                label: '出店する（¥30,000 + 準備コスト）',
+                effect: { money: -30000, reputation: 0.25, _tempCustomerMult: 1.15 },
+                response: 'お祭りに出店！地域での認知度が一気に上がった。新規客が増えた。',
+            },
+            {
+                label: '見送る',
+                effect: {},
+                response: '今回は見送り。店舎の営業に集中する判断。',
+            },
+        ],
+    },
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━
+// カオスイベント（確率発火）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━
+const CHAOS_EVENTS = [
+    {
+        id: 'customer_complaint',
+        type: 'chaos',
+        title: '商品不良のクレーム',
+        text: `「買った商品に傷がある」とお客さんからクレームが入った。\n小売業で避けられない問題。\n対応次第で評判が変わる。`,
+        choices: [
+            {
+                label: '全額返金 + お詫びの品（¥15,000）',
+                effect: { money: -15000, reputation: 0.15 },
+                response: '訠心訠意の対応にお客さん感動。「神対応」と口コミで広まった。',
+            },
+            {
+                label: '商品交換のみ（最低限）',
+                effect: { money: -3000 },
+                response: '商品を交換。最低限の対応だが、お客さんの不満は残った。',
+            },
+        ],
+    },
+    {
+        id: 'wholesale_offer',
+        type: 'chaos',
+        title: '問屋から大口取引の提案',
+        text: `問屋から「大口注文をしてくれれば、単価も20%下げる」と提案が。\n単価は下がるが、在庫リスクが増える。\n「キャッシュと在庫のトレードオフ」そのもの。`,
+        choices: [
+            {
+                label: '大口発注（¥500,000）',
+                effect: { money: -500000, reputation: 0.05, _tempCustomerMult: 1.08 },
+                response: '大口発注で仕入コストが下がった。ただし在庫を捘く必要がある。',
+            },
+            {
+                label: '通常発注を続ける',
+                effect: {},
+                response: '無理に在庫を持たない判断。「小さく回す」戦略を貫く。',
+            },
+        ],
+    },
+    {
+        id: 'seasonal_trend_advice',
+        type: 'chaos',
+        character: 'shou',
+        title: 'ショウの季節アドバイス',
+        text: `ショウさんが言った。\n「次の季節、このカテゴリが伸びるよ。\n　今のうちに仕込んでおけば先行者利益が取れる」`,
+        choices: [
+            {
+                label: 'ショウの助言に従う（¥200,000投資）',
+                effect: { money: -200000, reputation: 0.1, _tempCustomerMult: 1.10 },
+                response: 'ショウの読みは当たった！先行投資が売上につながった。',
+            },
+            {
+                label: '様子を見る',
+                effect: {},
+                response: '待ちの姿勢。機会損失の可能性もあるが、リスクは避けた。',
+            },
+        ],
+    },
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -272,7 +395,7 @@ export function createCh2TaxEvent(state) {
 // メインイベント取得関数
 // ━━━━━━━━━━━━━━━━━━━━━━━━━
 export function getCh2EventForTurn(turn, state) {
-    // ── アヤ登場 ──
+    // ── 優先順位1: アヤ登場（固定ターン） ──
     if (turn === 1 && state.ayaFromCh1) {
         return {
             id: 'aya_carryover',
@@ -295,46 +418,7 @@ export function getCh2EventForTurn(turn, state) {
         };
     }
 
-    // ── ケンジアーク ──
-    for (const arc of KENJI_CH2_ARC) {
-        if (turn >= arc.turnRange[0] && turn <= arc.turnRange[1]
-            && !state._triggeredEvents?.includes(`kenji_ch2_${arc.stage}`)) {
-            let text = arc.text;
-            if (arc.stage === 1) {
-                text = (state.kenjiStage >= 5) ? arc.textHigh : arc.textLow;
-            }
-            if (arc.stage === 4) {
-                text = (state.kenjiGrowth === 'aggressive') ? arc.textAggressive : arc.textConservative;
-            }
-            const event = {
-                id: `kenji_ch2_${arc.stage}`,
-                type: 'kenji',
-                title: arc.title,
-                text,
-                _kenjiCh2Stage: arc.stage,
-            };
-            if (arc.choices) event.choices = arc.choices;
-            return event;
-        }
-    }
-
-    // ── 転換点イベント ──
-    for (const evt of TURNING_POINT_EVENTS) {
-        if (turn >= evt.turnRange[0] && turn <= evt.turnRange[1]
-            && !state._triggeredEvents?.includes(evt.id)) {
-            return evt;
-        }
-    }
-
-    // ── キャラクターイベント ──
-    for (const evt of CHARACTER_EVENTS) {
-        if (turn >= evt.turnRange[0] && turn <= evt.turnRange[1]
-            && !state._triggeredEvents?.includes(evt.id)) {
-            return evt;
-        }
-    }
-
-    // ── 確定申告（Turn 36 or 37） ──
+    // ── 優先順位2: 確定申告（固定ターン・最優先） ──
     if ((turn === 36 || turn === 37) && !state._triggeredEvents?.includes('tax_ch2')) {
         const tax = createCh2TaxEvent(state);
         return {
@@ -347,7 +431,7 @@ export function getCh2EventForTurn(turn, state) {
         };
     }
 
-    // ── CF計算書初登場（Turn 12-13） ──
+    // ── 優先順位3: CF計算書初登場（固定ターン） ──
     if ((turn === 12 || turn === 13) && !state._triggeredEvents?.includes('cf_statement_intro')) {
         return {
             id: 'cf_statement_intro',
@@ -355,6 +439,110 @@ export function getCh2EventForTurn(turn, state) {
             title: 'CF計算書が登場！',
             text: `ショウさん「損益計算書だけじゃなく、キャッシュフロー計算書も見てくれ。」\n\n「利益が出ているのに現金が減っている」\nその理由が、在庫への投資だとわかる瞬間。`,
         };
+    }
+
+    // ── 優先順位4: ケンジアーク（stage順序制御付き） ──
+    const nextKenjiStage = (state.kenjiCh2Stage || 0) + 1;
+    const kenjiEvent = KENJI_CH2_ARC.find(arc =>
+        arc.stage === nextKenjiStage &&
+        turn >= arc.turnRange[0] && turn <= arc.turnRange[1] &&
+        !state._triggeredEvents?.includes(`kenji_ch2_${arc.stage}`)
+    );
+    if (kenjiEvent) {
+        let text = kenjiEvent.text;
+        if (kenjiEvent.stage === 1) {
+            text = (state.kenjiStage >= 5) ? kenjiEvent.textHigh : kenjiEvent.textLow;
+        }
+        if (kenjiEvent.stage === 4) {
+            text = (state.kenjiGrowth === 'aggressive') ? kenjiEvent.textAggressive : kenjiEvent.textConservative;
+        }
+        const event = {
+            id: `kenji_ch2_${kenjiEvent.stage}`,
+            type: 'kenji',
+            title: kenjiEvent.title,
+            text,
+            _kenjiCh2Stage: kenjiEvent.stage,
+        };
+        if (kenjiEvent.choices) event.choices = kenjiEvent.choices;
+        return event;
+    }
+
+    // ── 優先順位4.5: フォースドチョイス（中盤の経営判断を強制） ──
+    const forcedChoices = [
+        {
+            id: 'forced_clearance_sale',
+            turn: 25,
+            type: 'turning_point',
+            title: '在庫処分セールの判断',
+            text: `季節の変わり目——倉庫に入りきらない在庫がたまってきた。\n\n在庫処分セールをするか？\n「在庫は眠っている現金だ」とショウさんは言っていた。`,
+            choices: [
+                {
+                    label: '50%オフで一斉セール（在庫圧縮、利益率↓）',
+                    response: '在庫が一気に捌けた。利益率は下がったが、倉庫がスッキリ。キャッシュフローが改善した。',
+                    effect: { money: 80000, reputation: -0.05 },
+                },
+                {
+                    label: '少しずつ値下げ（在庫じわじわ減、利益率維持）',
+                    response: '少しずつ値下げして回転させる。時間はかかるが、ブランドイメージは守れた。',
+                    effect: { money: 25000, reputation: 0.1 },
+                },
+                {
+                    label: '定価で売り切る（在庫リスク継続）',
+                    response: '定価を貫く。在庫は残るが、利益率は維持。現金化に時間がかかるリスク。',
+                    effect: { reputation: 0.15 },
+                },
+            ],
+        },
+        {
+            id: 'forced_supplier_change',
+            turn: 35,
+            type: 'turning_point',
+            title: '仕入先の変更提案',
+            text: `新しい仕入先から営業が来た。\n今より15%安いが、品質は「そこそこ」。\n\n安さを取るか、品質を守るか。小売の永遠のジレンマ。`,
+            choices: [
+                {
+                    label: '新仕入先に切り替え（コスト削減、品質リスク）',
+                    response: '原価が下がった。ただ返品も少し増えた。コスト削減と品質のバランスが課題に。',
+                    effect: { money: 50000, reputation: -0.1 },
+                },
+                {
+                    label: '既存仕入先と価格交渉（コスト微減、関係維持）',
+                    response: '「他社からも提案が来ている」と交渉。5%の値引きを勝ち取った。信頼関係は維持。',
+                    effect: { money: 25000, reputation: 0.1 },
+                },
+                {
+                    label: '現状維持（品質重視）',
+                    response: '品質を最優先に。「安物買いの銭失い」にならない判断。',
+                    effect: { reputation: 0.15 },
+                },
+            ],
+        },
+    ];
+    const forcedHit = forcedChoices.find(f => turn === f.turn && !state._triggeredEvents?.includes(f.id));
+    if (forcedHit) return forcedHit;
+
+    // ── 優先順位5: 転換点イベント（重複防止付き） ──
+    for (const evt of TURNING_POINT_EVENTS) {
+        if (turn >= evt.turnRange[0] && turn <= evt.turnRange[1]
+            && !state._triggeredEvents?.includes(evt.id)) {
+            return evt;
+        }
+    }
+
+    // ── 優先順位6: キャラクターイベント（重複防止付き） ──
+    for (const evt of CHARACTER_EVENTS) {
+        if (turn >= evt.turnRange[0] && turn <= evt.turnRange[1]
+            && !state._triggeredEvents?.includes(evt.id)) {
+            return evt;
+        }
+    }
+
+    // ── 優先順位7: カオスイベント（10%確率） ──
+    if (Math.random() < 0.10 && turn >= 10) {
+        const available = CHAOS_EVENTS.filter(e => !state._triggeredEvents?.includes(e.id));
+        if (available.length > 0) {
+            return available[Math.floor(Math.random() * available.length)];
+        }
     }
 
     return null;

@@ -1,4 +1,4 @@
-// Turn 1-18+ イベントデータ — 設計書 v3 準拠（フルゲーム版、目標¥500K）
+// Turn 1-16+ イベントデータ — 設計書 v3 準拠（フルゲーム版、目標¥300K）
 
 export const EVENTS = [
     // ══════════════════════════════════════
@@ -33,7 +33,7 @@ export const EVENTS = [
             '「カフェ開きたいんだって？',
             '　いくら必要か知ってる？」',
             '',
-            '……50万。自分の手でそれだけ貯めろ。',
+            '……30万。自分の手でそれだけ貯めろ。',
             '',
             '「日給¥{baitoPay}。',
             '　生活費を引いて、手残りは——」',
@@ -141,14 +141,14 @@ export const EVENTS = [
             '「食費を見直せ。',
             '　自炊で月¥15,000浮く。',
             '　ただし毎日の買い出しと調理で少し疲れる。',
-            '　全活動の効率が−5%になる。」',
+            '　副業の効率が −5% 下がる。」',
             '',
             '月¥15,000の節約 vs 副業効率−5%。',
             '今の収入構造で、どっちが得か？',
         ],
         choices: [
             {
-                label: '自炊する（生活費−¥3,750/週、効率−5%）',
+                label: '自炊する（生活費 −¥3,750/週、副業効率 −5%）',
                 effect: { hasCooking: true },
                 response: '自炊を始めた。食費は減ったが、毎日少し疲れる。',
             },
@@ -173,16 +173,16 @@ export const EVENTS = [
             '「最近この店の良品、すぐなくなるんだよね。',
             '　お互い大変だな。」',
             '',
-            '競合が増えた。品揃えが悪化するかもしれない。',
+            '同じ店にライバルがいると、良い商品を先に取られるかもしれない。',
         ],
         choices: [
             {
-                label: '同じ店で続ける（利益率低下を受け入れる）',
+                label: '「負けない。自分のペースで続ける」（せどり利益率 −10%）',
                 effect: { rivalRelation: 'compete' },
                 response: '同じ店で競争することにした。良い商品は早い者勝ちだ。',
             },
             {
-                label: '情報交換する（リサーチ精度UP、品数は戻らない）',
+                label: '「一緒に情報共有しよう」（リサーチ精度UP）',
                 effect: { rivalRelation: 'cooperate' },
                 response: 'タクヤと情報交換を始めた。競合だけど、情報の力は大きい。',
             },
@@ -219,7 +219,7 @@ export const EVENTS = [
                     '「会社の方針でね。人件費カットだって。',
                     '　来月から週4日までしか入れないよ。」',
                     '',
-                    '── コンビニバイト 週5日 → 週4日に変更',
+                    '── コンビニバイト 最大日数が 5日→4日 に減少',
                 ],
                 effect: { baitoMaxDaysOverride: 4 },
             },
@@ -340,52 +340,51 @@ export const EVENTS = [
     },
 
     // ══════════════════════════════════════
-    // Phase C（Turn 13-18）：加速
+    // Phase C（Turn 11-16）：加速
     // ══════════════════════════════════════
 
-    // Turn 13: 副業がバイトを超えた
+    // Turn 11: 副業がバイトを超えた
     {
         id: 'side_income_surpass',
-        turn: 13,
+        turn: 11,
         type: 'story',
         character: null,
         text: [
             'ふと気づいた。',
             '',
             '先週の収入を振り返ると——',
-            '副業の収入が、バイトを大きく上回っている。',
+            '副業の収入が、バイトを上回っている。',
             '',
             '「仕入れて売る」「作って売る」。',
-            'それが日給の天井を超える手段だった。',
-            '',
-            'ショウさんの言葉が、今なら分かる。',
+            '日給の天井を超える手段が、少しずつ見えてきた。',
         ],
         choices: null,
+        condition: (state) => state.money < 300000,
     },
 
-    // Turn 14: SNSの同世代起業家
+    // Turn 12: SNSの同世代起業家
     {
         id: 'sns_entrepreneur',
-        turn: 14,
+        turn: 12,
         type: 'story',
         character: null,
         text: [
             '同い年の奴がSNSで月商100万って投稿してる。',
-            '自分はまだ¥{money}。焦る。',
+            '自分はまだ¥{money}。',
             '',
-            '……でも、あいつの利益率は何%なんだ？',
-            '売上と利益は違う。それはもう知っている。',
+            '……でも、あいつの利益率は何%なんだろう。',
+            '「売上」と「利益」は違う——あの閉店したカフェの店長の話を思い出す。',
             '',
-            '月商120万で赤字だったカフェ。',
-            '数字のどこを見るかで、景色は変わる。',
+            '月商120万でも、経費が上回れば赤字だった。',
+            '大事なのは見せ方じゃなく、手残り。',
         ],
         choices: null,
     },
 
-    // Turn 15: 親からの電話
+    // Turn 13: 親からの電話
     {
         id: 'parent_call',
-        turn: 15,
+        turn: 13,
         type: 'story',
         character: null,
         text: [
@@ -396,16 +395,15 @@ export const EVENTS = [
             '',
             '電話を切った後、しばらく天井を見つめていた。',
             '',
-            'でも、自分にはやりたいことがある。',
-            'カフェを開く。',
+            'でも、¥{money}。ゼロから始めて、ここまで来た。',
         ],
         choices: null,
     },
 
-    // Turn 16: ショウ「確定申告しろ」
+    // Turn 14: ショウ「確定申告しろ」
     {
         id: 'shou_tax',
-        turn: 16,
+        turn: 14,
         type: 'story',
         character: 'shou',
         text: [
@@ -414,19 +412,19 @@ export const EVENTS = [
             '「副業で年間20万以上稼いだら確定申告が必要だ。',
             '　知らなかったじゃ済まない。」',
             '',
-            '「青色申告にすると控除が大きい。',
+            '「青色申告にすると最大65万円の控除がある。',
             '　小規模企業共済も使え。',
             '　節税は合法的な武器だ。」',
             '',
-            '……税金のことは、また別の戦いだ。',
+            '……税金のことは、カフェを開いたら本格的に関わることになる。',
         ],
         choices: null,
     },
 
-    // Turn 17: ケンジの末路
+    // Turn 15: ケンジの末路
     {
         id: 'kenji_failure',
-        turn: 17,
+        turn: 15,
         type: 'story',
         character: 'kenji',
         text: [
@@ -438,31 +436,25 @@ export const EVENTS = [
             '',
             '量だよ量！って言ってたケンジ。',
             'リサーチなしの仕入れが裏目に出た。',
-            '',
-            '「仕入れ量」と「情報精度」。',
-            'どちらを重視するかで、結末はこんなにも変わる。',
         ],
         choices: null,
     },
 
-    // Turn 18+（ゴール未達時）: ゴールが見える
+    // Turn 16+（ゴール未達時）: ゴールが見える
     {
         id: 'final_sprint',
-        turn: 18,
+        turn: 16,
         type: 'story',
         character: null,
         text: [
             'あと少し。',
             '',
-            '¥{money}。目標の¥500,000まで、あと¥{remaining}。',
-            '',
-            '「仕入れて売る」を覚えたから。',
-            '「作って売る」を覚えたから。',
-            '配分を変え続けたから。',
+            '¥{money}。目標の¥300,000まで、あと¥{remaining}。',
             '',
             'ラストスパート。',
         ],
         choices: null,
+        condition: (state) => state.money < 300000,
     },
 ];
 
@@ -637,20 +629,10 @@ const DRINKING_EVENT = {
 
 /**
  * 指定ターンのイベントを取得
+ * 優先順序: 固定イベント > マルシェ常連 > 共同仕入れ > 条件付きイベント > ランダム
  */
 export function getEventForTurn(turn, state) {
-    // マルシェ常連客（出店3回以上、未取得）
-    if (turn >= 8 && turn <= 10 && state.marcheSessions >= 3 && !state.marcheHasLoyalty) {
-        return { ...MARCHE_LOYALTY_EVENT, turn };
-    }
-
-    // 共同仕入れ（Turn 11-12、タクヤと協力関係）
-    if (turn >= 11 && turn <= 12 && state.rivalRelation === 'cooperate'
-        && !state.jointPurchaseInvested && !state.jointPurchaseAvailable) {
-        return { ...JOINT_PURCHASE_EVENT, turn };
-    }
-
-    // 固定イベント
+    // ── 固定イベント（最優先） ──
     const fixedEvent = EVENTS.find(e => {
         if (e.turn !== turn) return false;
         if (e.condition && !e.condition(state)) return false;
@@ -658,7 +640,18 @@ export function getEventForTurn(turn, state) {
     });
     if (fixedEvent) return fixedEvent;
 
-    // ── 条件付き追加イベント ──
+    // ── 条件付き動的イベント ──
+
+    // マルシェ常連客（出店3回以上、未取得）
+    if (turn >= 8 && turn <= 10 && state.marcheSessions >= 3 && !state.marcheHasLoyalty) {
+        return { ...MARCHE_LOYALTY_EVENT, turn };
+    }
+
+    // 共同仕入れ（Turn 11-15、タクヤと協力関係、固定イベント無い週にフォールバック）
+    if (turn >= 11 && turn <= 15 && state.rivalRelation === 'cooperate'
+        && !state.jointPurchaseInvested && !state.jointPurchaseAvailable) {
+        return { ...JOINT_PURCHASE_EVENT, turn };
+    }
 
     // ミサキ SNS（Turn 6、ミサキ未登場時のみ）
     if (turn === 6 && !state.metCharacters?.includes('misaki')) {
@@ -670,8 +663,8 @@ export function getEventForTurn(turn, state) {
         return { ...RYOUTA_SALARY_EVENT, turn };
     }
 
-    // ケンジのセミナー誘い（Turn 14）
-    if (turn === 14 && state.metCharacters?.includes('kenji')) {
+    // ケンジのセミナー誘い（Turn 16、目標達成済みなら表示）
+    if (turn === 16 && state.metCharacters?.includes('kenji') && state.money >= 300000) {
         return { ...KENJI_SEMINAR_EVENT, turn };
     }
 
@@ -687,3 +680,4 @@ export function getEventForTurn(turn, state) {
 
     return null;
 }
+

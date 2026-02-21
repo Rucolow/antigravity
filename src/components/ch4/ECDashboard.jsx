@@ -1,8 +1,15 @@
 /**
  * ECダッシュボード — メインゲームプレイ画面
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { useECStore } from '../../store/ecEngine';
+import KPITooltip from '../KPITooltip';
+import BenchmarkBar from '../BenchmarkBar';
+import GoalBar from '../GoalBar';
+import AdvisorBar from '../AdvisorBar';
+import WeeklyFocusBar from '../WeeklyFocusBar';
+import { CH4_GOAL } from '../../data/chapterGoals';
+import { getWeeklyFocusCards } from '../../data/weeklyFocusCards';
 import {
     PRODUCT_CATEGORIES, BRAND_CONCEPTS, AD_PLATFORMS, CRM_TOOLS,
     CREATIVE_FRESHNESS, getCh4Phase, CH4_PHASES, getCh4Month,
@@ -10,6 +17,7 @@ import {
 
 export default function ECDashboard() {
     const state = useECStore();
+    const [selectedFocus, setSelectedFocus] = useState(state._lastFocus || null);
     const phase = getCh4Phase(state.turn);
     const phaseLabel = CH4_PHASES[phase]?.label || '';
     const monthInfo = getCh4Month(state.turn);
@@ -28,28 +36,33 @@ export default function ECDashboard() {
                 <div className="ch4-header__phase">{phaseLabel}</div>
             </div>
 
+            {/* チャプターゴール */}
+            <GoalBar goal={CH4_GOAL} state={state} />
+            <AdvisorBar chapter={4} state={state} />
+            <WeeklyFocusBar cards={getWeeklyFocusCards(4)} selected={selectedFocus} onSelect={setSelectedFocus} />
+
             {/* ── KPI ── */}
             <div className="ch4-kpi-row ch4-kpi-row--quad">
                 <div className="ch4-kpi">
-                    <div className="ch4-kpi__label">CAC</div>
+                    <div className="ch4-kpi__label"><KPITooltip term="CAC">CAC</KPITooltip></div>
                     <div className={`ch4-kpi__value${(state.cac || 0) > 7000 ? ' ch4-kpi__value--red' : ''}`}>
                         {noResult ? '—' : `¥${(state.cac || 0).toLocaleString()}`}
                     </div>
                 </div>
                 <div className="ch4-kpi">
-                    <div className="ch4-kpi__label">LTV</div>
+                    <div className="ch4-kpi__label"><KPITooltip term="LTV">LTV</KPITooltip></div>
                     <div className="ch4-kpi__value">
                         {noResult ? '—' : `¥${(state.ltv || 0).toLocaleString()}`}
                     </div>
                 </div>
                 <div className="ch4-kpi">
-                    <div className="ch4-kpi__label">LTV/CAC</div>
+                    <div className="ch4-kpi__label"><KPITooltip term="LTV/CAC">LTV/CAC</KPITooltip></div>
                     <div className={`ch4-kpi__value ch4-kpi__value${ltvCacClass}`}>
                         {noResult ? '—' : `${state.ltvCacRatio || 0}x`}
                     </div>
                 </div>
                 <div className="ch4-kpi">
-                    <div className="ch4-kpi__label">ROAS</div>
+                    <div className="ch4-kpi__label"><KPITooltip term="ROAS">ROAS</KPITooltip></div>
                     <div className={`ch4-kpi__value${(state.roas || 0) < 2.0 ? ' ch4-kpi__value--red' : ''}`}>
                         {noResult ? '—' : `${state.roas || 0}x`}
                     </div>
@@ -71,6 +84,16 @@ export default function ECDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* 業界ベンチマーク */}
+            {!noResult && state.turn >= 4 && (
+                <div style={{ padding: '8px 16px' }}>
+                    <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.1em' }}>業界平均との比較</div>
+                    <BenchmarkBar label="CAC" value={state.cac || 0} avg={5000} max={15000} unit="¥" lowerIsBetter />
+                    <BenchmarkBar label="LTV/CAC" value={state.ltvCacRatio || 0} avg={3} max={8} unit="x" />
+                    <BenchmarkBar label="ROAS" value={state.roas || 0} avg={3} max={8} unit="x" />
+                </div>
+            )}
 
             {/* ── 広告パフォーマンス ── */}
             {!noResult && Object.keys(state.adResults || {}).length > 0 && (
@@ -204,8 +227,27 @@ export default function ECDashboard() {
             )}
 
             {/* ── アクションボタン ── */}
-            <button className="ch4-btn ch4-btn--primary" onClick={state.confirmWeek}>
-                今週を確定する →
+            {state.turn >= 10 && (
+                <button
+                    onClick={() => useECStore.setState({ autoMode: !state.autoMode })}
+                    className="ch4-btn ch4-btn--secondary"
+                    style={{
+                        background: state.autoMode ? 'var(--ch4-accent)' : 'transparent',
+                        color: state.autoMode ? '#fff' : 'var(--ch4-accent)',
+                        border: '1px solid var(--ch4-accent)',
+                        fontSize: '0.72rem', marginBottom: 8,
+                    }}
+                >
+                    ⚡ オート {state.autoMode ? 'ON' : 'OFF'}
+                </button>
+            )}
+            <button className="ch4-btn ch4-btn--primary" disabled={!selectedFocus} onClick={() => {
+                const card = getWeeklyFocusCards(4).find(c => c.id === selectedFocus);
+                useECStore.setState({ _weeklyFocus: card ? card.apply() : {}, _lastFocus: selectedFocus });
+                state.confirmWeek();
+                setSelectedFocus(null);
+            }}>
+                {!selectedFocus ? '⚡ 判断を選んでください' : '今週を確定する →'}
             </button>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>

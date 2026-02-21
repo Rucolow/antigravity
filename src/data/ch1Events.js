@@ -665,24 +665,7 @@ const ALL_CHAOS_EVENTS = [
 ];
 
 export function getCh1EventForTurn(turn, state) {
-    // ケンジアーク（固定タイミング）
-    const kenjiEvent = KENJI_ARC.find(k =>
-        k.stage === state.kenjiStage + 1 &&
-        turn >= k.turnRange[0] && turn <= k.turnRange[1]
-    );
-    if (kenjiEvent) {
-        return {
-            id: `kenji_stage_${kenjiEvent.stage}`,
-            type: 'kenji',
-            character: 'kenji',
-            title: `ケンジ — ${kenjiEvent.title}`,
-            text: kenjiEvent.text,
-            choices: null,
-            _kenjiStage: kenjiEvent.stage,
-        };
-    }
-
-    // 税金イベント（固定ターン）
+    // 優先順位1: 税金イベント（絶対固定ターン）
     if (turn === TAX_FILING.turn && state.totalProfit > 0) {
         const tax = createTaxEvent(state);
         return {
@@ -725,7 +708,24 @@ export function getCh1EventForTurn(turn, state) {
         }
     }
 
-    // ワンオペ天井（条件付き）
+    // 優先順位2: ケンジアーク（固定タイミング範囲）
+    const kenjiEvent = KENJI_ARC.find(k =>
+        k.stage === state.kenjiStage + 1 &&
+        turn >= k.turnRange[0] && turn <= k.turnRange[1]
+    );
+    if (kenjiEvent) {
+        return {
+            id: `kenji_stage_${kenjiEvent.stage}`,
+            type: 'kenji',
+            character: 'kenji',
+            title: `ケンジ — ${kenjiEvent.title}`,
+            text: kenjiEvent.text,
+            choices: null,
+            _kenjiStage: kenjiEvent.stage,
+        };
+    }
+
+    // 優先順位3: ワンオペ天井（条件達成時）
     if (ONEOPE_CEILING.condition(state) && turn >= 13) {
         return {
             ...ONEOPE_CEILING,
@@ -733,16 +733,77 @@ export function getCh1EventForTurn(turn, state) {
         };
     }
 
-    // キャラクターイベント（固定タイミング）
+    // 優先順位4: キャラクターイベント（固定タイミング範囲）
     for (const ev of CHARACTER_EVENTS) {
-        if (turn >= ev.turnRange[0] && turn <= ev.turnRange[0] + 1) {
+        if (turn >= ev.turnRange[0] && turn <= ev.turnRange[1]) {
             if (!state._triggeredEvents?.includes(ev.id)) {
-                return { ...ev, choices: null };
+                return { ...ev, choices: null }; // キャライベントは選択肢なし
             }
         }
     }
 
-    // 転機イベント（確率＋条件＋重複防止）
+    // 優先順位4.5: フォースドチョイス（中盤の経営判断を強制）
+    const forcedChoices = [
+        {
+            id: 'forced_menu_review',
+            turn: 25,
+            title: 'メニュー見直しの時期',
+            text: [
+                'オープンから半年。',
+                '常連さんの「いつもの」は決まっているが、',
+                '新規のお客さんの注文パターンが変わってきた。',
+                '',
+                'メニューを見直すべきか？',
+            ],
+            choices: [
+                {
+                    label: '季節メニューを追加（原価率+3%、来客+12%）',
+                    response: '季節限定メニューを導入。SNSで話題になり新規客が増えた。ただし原価管理が少し複雑に。',
+                    effect: { seasonalMenu: true, reputation: 0.2, _tempCustomerMult: 1.12 },
+                },
+                {
+                    label: '看板メニューに集中（原価率-2%、品質安定）',
+                    response: '「うちはコーヒーで勝負する」。品目を絞り、品質と原価を両立。常連の満足度が上がった。',
+                    effect: { reputation: 0.25 },
+                },
+            ],
+        },
+        {
+            id: 'forced_hours_rethink',
+            turn: 35,
+            title: '営業時間の再考',
+            text: [
+                '最近、閉店間際のお客さんが増えている。',
+                'でも、夜の人件費と光熱費がかさむ。',
+                '',
+                '営業時間を延長するか、それとも今のまま効率を追求するか。',
+            ],
+            choices: [
+                {
+                    label: '1時間延長する（固定費+¥15,000/週、来客+10%）',
+                    response: '営業時間を延長。夜カフェ需要を取り込んだ。ただし固定費が増え、損益分岐点が上がった。',
+                    effect: { money: -15000, reputation: 0.1, _tempCustomerMult: 1.10 },
+                },
+                {
+                    label: '朝に1時間前倒し（コスト中立、客層変化）',
+                    response: 'モーニング営業に切り替え。出勤前のビジネスパーソンが常連に。コストはほぼ変わらず新規層を獲得。',
+                    effect: { reputation: 0.2, _tempCustomerMult: 1.08 },
+                },
+                {
+                    label: '現状維持（効率優先）',
+                    response: '今のペースを守る。「やらないことを決める」のも経営判断。',
+                    effect: {},
+                },
+            ],
+        },
+    ];
+    const triggered = state._triggeredEvents || [];
+    const forcedHit = forcedChoices.find(f => turn === f.turn && !triggered.includes(f.id));
+    if (forcedHit) {
+        return { ...forcedHit, type: 'turning_point' };
+    }
+
+    // 優先順位5: 転機イベント（確率＋条件＋重複防止）
     if (Math.random() < 0.25) {
         const triggered = state._triggeredEvents || [];
         const available = ALL_TURNING_POINTS.filter(e =>
@@ -756,7 +817,7 @@ export function getCh1EventForTurn(turn, state) {
         }
     }
 
-    // 人間関係イベント（確率＋条件＋重複防止）
+    // 優先順位6: 人間関係イベント（確率＋条件＋重複防止）
     if (Math.random() < 0.15) {
         const triggered = state._triggeredEvents || [];
         const available = ALL_HUMAN_EVENTS.filter(e => {
@@ -770,7 +831,7 @@ export function getCh1EventForTurn(turn, state) {
         }
     }
 
-    // カオスイベント（確率＋条件＋重複防止）
+    // 優先順位7: カオスイベント（確率＋条件＋重複防止）
     if (Math.random() < 0.08) {
         const triggered = state._triggeredEvents || [];
         const available = ALL_CHAOS_EVENTS.filter(e =>
@@ -786,3 +847,4 @@ export function getCh1EventForTurn(turn, state) {
 
     return null;
 }
+

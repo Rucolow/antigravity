@@ -1,10 +1,20 @@
 import React from 'react';
+import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import { useHotelStore } from '../../store/hotelEngine';
+import { detectBehaviorMilestone } from '../../data/behaviorMilestones';
 
 export default function HotelResult() {
     const state = useHotelStore(s => s);
     const nextTurn = useHotelStore(s => s.nextTurn);
+    const autoMode = useHotelStore(s => s.autoMode);
     const result = state.weekResult;
+
+    // 行動変化マイルストーン
+    const behaviorMs = result ? detectBehaviorMilestone(3, state, result) : null;
+    if (behaviorMs && !(state._behaviorMilestones || []).includes(behaviorMs.id)) {
+        useHotelStore.setState({ _behaviorMilestones: [...(state._behaviorMilestones || []), behaviorMs.id] });
+    }
+    useAutoAdvance(autoMode && !behaviorMs, nextTurn);
 
     if (!result) return null;
 
@@ -41,6 +51,17 @@ export default function HotelResult() {
                         {newMilestone.type === 'full_house' && 'マイルストーン達成: 初の満室！'}
                         {newMilestone.type === 'revpar_8k' && 'マイルストーン達成: RevPAR ¥8,000突破！'}
                     </p>
+                </div>
+            )}
+
+            {/* 行動変化マイルストーン */}
+            {behaviorMs && (
+                <div className="ch3-card" style={{ borderColor: 'var(--ch3-gold)', textAlign: 'center' }}>
+                    <p style={{ fontSize: '1.1rem' }}>{behaviorMs.icon}</p>
+                    <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--ch3-gold)' }}>{behaviorMs.title}</p>
+                    {behaviorMs.text.split('\n').map((line, i) => (
+                        <p key={i} style={{ fontSize: '0.78rem', color: 'var(--ch3-text-sub)' }}>{line}</p>
+                    ))}
                 </div>
             )}
 
@@ -99,6 +120,32 @@ export default function HotelResult() {
                     <span className="ch3-row__value">¥{profit.toLocaleString()}</span>
                 </div>
             </div>
+
+            {/* 前週比較 */}
+            {state.profitHistory.length >= 2 && (() => {
+                const prev = state.profitHistory[state.profitHistory.length - 2];
+                const occDiff = Math.round(state.weeklyOccupancy * 100) - Math.round((prev.occupancy || 0) * 100);
+                const revparDiff = state.weeklyRevPAR - (prev.revpar || 0);
+                const profitDiff = profit - prev.profit;
+                const diffs = [
+                    { label: '稼働率', diff: occDiff, fmt: `${occDiff >= 0 ? '+' : ''}${occDiff}pt` },
+                    { label: 'RevPAR', diff: revparDiff, fmt: `${revparDiff >= 0 ? '+' : ''}¥${revparDiff.toLocaleString()}` },
+                    { label: '利益', diff: profitDiff, fmt: `${profitDiff >= 0 ? '+' : ''}¥${profitDiff.toLocaleString()}` },
+                ];
+                return (
+                    <div className="ch3-card" style={{ padding: '8px 12px' }}>
+                        <div style={{ fontSize: '0.62rem', color: 'var(--ch3-text-sub, #6a7f99)', marginBottom: 4 }}>前週比</div>
+                        {diffs.map((d, i) => (
+                            <div key={i} className="ch3-row" style={{ fontSize: '0.72rem', padding: '2px 0' }}>
+                                <span className="ch3-row__label">{d.label}</span>
+                                <span className="ch3-row__value" style={{ fontWeight: 600, color: d.diff > 0 ? 'var(--ch3-green)' : d.diff < 0 ? 'var(--ch3-red)' : 'inherit' }}>
+                                    {d.diff > 0 ? '↑' : d.diff < 0 ? '↓' : '→'} {d.fmt}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                );
+            })()}
 
             {/* 直販進捗 */}
             <div className="ch3-card">

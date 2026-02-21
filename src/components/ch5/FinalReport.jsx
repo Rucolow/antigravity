@@ -3,12 +3,17 @@
  */
 import React from 'react';
 import { useREStore } from '../../store/realEstateEngine';
+import { gradeCh5 } from '../../data/chapterGrade';
+import GradeDisplay from '../GradeDisplay';
 
 export default function FinalReport() {
     const s = useREStore();
 
     const allSkills = [...new Set([...(s.allPreviousSkills || []), ...(s.skills || [])])];
     const isBankrupt = s.exitType === 'bankruptcy';
+    const ph = s.history || [];
+    const avgCashFlow = ph.length > 0 ? Math.round(ph.reduce((sum, p) => sum + (p.monthlyCashFlow || 0), 0) / ph.length) : 0;
+    const avgDSCR = ph.length > 0 ? parseFloat((ph.reduce((sum, p) => sum + (p.dscr || 1), 0) / ph.length).toFixed(2)) : 1;
 
     return (
         <>
@@ -27,6 +32,14 @@ export default function FinalReport() {
                     </div>
                 </div>
             )}
+
+            <GradeDisplay result={gradeCh5({
+                netWorth: s.netWorth || 0,
+                avgCashFlow,
+                avgDSCR,
+                skillCount: (s.skills || []).length,
+                gameClear: s.gameClear,
+            })} chapter={5} />
 
             {/* 純資産推移 */}
             <div className="ch5-card">

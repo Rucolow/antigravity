@@ -1,6 +1,8 @@
 import { useGameStore } from '../store/gameEngine';
 import { useCafeStore } from '../store/cafeEngine';
 import { evaluateSkills } from '../data/skills';
+import { gradeCh0 } from '../data/chapterGrade';
+import GradeDisplay from './GradeDisplay';
 
 export default function Report() {
     const state = useGameStore(s => s);
@@ -26,6 +28,8 @@ export default function Report() {
     return (
         <div className="report-screen">
             <h2 className="report__title">Chapter 0 — 振り返りレポート</h2>
+
+            <GradeDisplay result={gradeCh0({ money, turn, skillCount: acquiredSkills.length })} chapter={0} />
 
             {/* 基本データ */}
             <div className="report__section">

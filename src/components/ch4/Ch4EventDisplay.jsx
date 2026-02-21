@@ -55,7 +55,11 @@ export default function Ch4EventDisplay() {
             <div className="ch4-event">
                 <div className="ch4-event__type">{event.type || 'event'}</div>
                 <div className="ch4-event__title">{event.title}</div>
-                <div className="ch4-event__text">{event.text}</div>
+                <div className="ch4-event__text">
+                    {(Array.isArray(event.text) ? event.text : (event.text || '').split('\n')).map((line, i) => (
+                        <p key={i} style={{ margin: '4px 0' }}>{line || '\u00A0'}</p>
+                    ))}
+                </div>
 
                 {event.character && (
                     <div className="ch4-event__character">
@@ -81,13 +85,18 @@ export default function Ch4EventDisplay() {
 
                 {/* 選択肢がないイベント → 了解ボタン */}
                 {!event.choices && (
-                    <button
-                        className="ch4-btn ch4-btn--primary"
-                        onClick={handleDismiss}
-                        style={{ marginTop: '0.75rem' }}
-                    >
-                        了解
-                    </button>
+                    <>
+                        <button
+                            className="ch4-btn ch4-btn--primary"
+                            onClick={handleDismiss}
+                            style={{ marginTop: '0.75rem' }}
+                        >
+                            了解
+                        </button>
+                        <button onClick={handleDismiss} style={{ background: 'none', border: 'none', color: 'var(--ch4-text-sub)', fontSize: '0.65rem', cursor: 'pointer', marginTop: 6, opacity: 0.5, width: '100%' }}>
+                            スキップ ▸
+                        </button>
+                    </>
                 )}
             </div>
         </>

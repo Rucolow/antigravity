@@ -11,7 +11,7 @@ export default function SedoriShop() {
 
     if (!sedoriMode) {
         return (
-            <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 32 }}>
+            <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 16 }}>
                 <p className="section-header">せどり — {allocation.sedori}日</p>
                 <h2 style={{ fontSize: '1.2rem', marginBottom: 8 }}>リサイクルショップ到着！</h2>
                 <p className="text-secondary" style={{ fontSize: '0.9rem', marginBottom: sedoriFirstTime ? 12 : 32 }}>
@@ -58,7 +58,7 @@ export default function SedoriShop() {
                         少数精鋭で確実に利益を狙う！
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        最大{2 * allocation.sedori}品 / 売値精度◎ / ハズレ率1%
+                        店内から最大{2 * allocation.sedori}品を選べる / 売値精度◎ / ハズレ率1%
                     </div>
                 </div>
 
@@ -68,7 +68,7 @@ export default function SedoriShop() {
                         たくさん仕入れて当たりを引け！
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        最大{5 * allocation.sedori}品 / 売値は読みにくい / ハズレ率3%
+                        店内から最大{5 * allocation.sedori}品を選べる / 売値は読みにくい / ハズレ率3%
                     </div>
                 </div>
             </div>
@@ -84,11 +84,11 @@ export default function SedoriShop() {
             </p>
             <h2 style={{ fontSize: '1.1rem', marginBottom: 4 }}>どれを仕入れる？</h2>
             <p className="text-secondary" style={{ fontSize: '0.85rem', marginBottom: 16 }}>
-                {selectedItems.length} / {maxItems} 品選択中
+                {shopItems.length}品中 {selectedItems.length}品選択（最大{maxItems}品）
                 {selectedItems.length === 0 && ' — タップで選ぼう！'}
             </p>
 
-            <div style={{ maxHeight: '50vh', overflowY: 'auto', marginBottom: 24 }}>
+            <div style={{ maxHeight: '55vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 24 }}>
                 {shopItems.map(item => {
                     const price = getPrice(item);
                     const isSelected = selectedItems.includes(item.id);

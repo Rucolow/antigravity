@@ -2,12 +2,22 @@
  * Ch.5 月次結果表示
  */
 import React from 'react';
+import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import { useREStore } from '../../store/realEstateEngine';
 import { getCh5Month, getCh5Year } from '../../data/ch5Constants';
+import { detectBehaviorMilestone } from '../../data/behaviorMilestones';
 
 export default function REResult() {
     const s = useREStore();
     const nextTurn = useREStore(st => st.nextTurn);
+    const autoMode = useREStore(st => st.autoMode);
+
+    // 行動変化マイルストーン
+    const behaviorMs = detectBehaviorMilestone(5, s, {});
+    if (behaviorMs && !(s._behaviorMilestones || []).includes(behaviorMs.id)) {
+        useREStore.setState({ _behaviorMilestones: [...(s._behaviorMilestones || []), behaviorMs.id] });
+    }
+    useAutoAdvance(autoMode && !s.gameClear && !behaviorMs, nextTurn);
 
     const month = getCh5Month(s.turn);
     const year = getCh5Year(s.turn);
@@ -30,6 +40,32 @@ export default function REResult() {
                     {s.monthlyCashFlow >= 0 ? '+' : ''}¥{(s.monthlyCashFlow || 0).toLocaleString()}
                 </div>
             </div>
+
+            {/* 前月比較 */}
+            {(s.history || []).length >= 2 && (() => {
+                const prev = s.history[s.history.length - 2];
+                const cfDiff = (s.monthlyCashFlow || 0) - (prev.monthlyCashFlow || 0);
+                const rentDiff = (s.monthlyRent || 0) - (prev.monthlyRent || 0);
+                const nwDiff = (s.netWorth || 0) - (prev.netWorth || 0);
+                const diffs = [
+                    { label: 'CF', diff: cfDiff },
+                    { label: '家賃収入', diff: rentDiff },
+                    { label: '純資産', diff: nwDiff },
+                ];
+                return (
+                    <div className="ch5-card" style={{ padding: '8px 14px' }}>
+                        <div style={{ fontSize: '0.62rem', color: 'var(--ch5-text-sub)', marginBottom: 4 }}>前月比</div>
+                        {diffs.map((d, i) => (
+                            <div key={i} className="ch5-row" style={{ fontSize: '0.72rem', padding: '2px 0' }}>
+                                <span className="ch5-row__label">{d.label}</span>
+                                <span className="ch5-row__value" style={{ fontWeight: 600, color: d.diff > 0 ? 'var(--ch5-green)' : d.diff < 0 ? 'var(--ch5-red)' : 'inherit' }}>
+                                    {d.diff > 0 ? '↑' : d.diff < 0 ? '↓' : '→'} {d.diff >= 0 ? '+' : ''}¥{d.diff.toLocaleString()}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                );
+            })()}
 
             {/* 内訳 */}
             <div className="ch5-card">

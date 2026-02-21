@@ -1,5 +1,7 @@
 import React from 'react';
+import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import { useRetailStore } from '../../store/retailEngine';
+import { detectBehaviorMilestone } from '../../data/behaviorMilestones';
 
 const WEATHER_ICON = { sunny: '☀️', cloudy: '☁️', rainy: '🌧️', stormy: '⛈️' };
 const SEASON_LABEL = { spring: '🌸春', summer: '🌻夏', autumn: '🍂秋', winter: '❄️冬' };
@@ -7,9 +9,17 @@ const SEASON_LABEL = { spring: '🌸春', summer: '🌻夏', autumn: '🍂秋', 
 export default function RetailResult() {
     const state = useRetailStore(s => s);
     const nextTurn = useRetailStore(s => s.nextTurn);
+    const autoMode = useRetailStore(s => s.autoMode);
     const result = state.weekResult;
 
     if (!result) return null;
+
+    // 行動変化マイルストーン
+    const behaviorMs = detectBehaviorMilestone(2, state, result);
+    if (behaviorMs && !(state._behaviorMilestones || []).includes(behaviorMs.id)) {
+        useRetailStore.setState({ _behaviorMilestones: [...(state._behaviorMilestones || []), behaviorMs.id] });
+    }
+    useAutoAdvance(autoMode && !behaviorMs, nextTurn);
 
     const isProfit = state.weeklyProfit >= 0;
     const isNewMilestone = state.milestonesHit.some(m => m.turn === state.turn);
@@ -42,6 +52,17 @@ export default function RetailResult() {
                 </div>
             )}
 
+            {/* 行動変化マイルストーン */}
+            {behaviorMs && (
+                <div className="ch2-milestone">
+                    <div className="ch2-milestone__icon">{behaviorMs.icon}</div>
+                    <h3>{behaviorMs.title}</h3>
+                    {behaviorMs.text.split('\n').map((line, i) => (
+                        <p key={i}>{line}</p>
+                    ))}
+                </div>
+            )}
+
             {/* P&L */}
             <div className="ch2-result__pl">
                 <div className="ch2-result__row">
@@ -68,6 +89,28 @@ export default function RetailResult() {
                     <span>{isProfit ? '+' : ''}¥{result.netProfit.toLocaleString()}</span>
                 </div>
             </div>
+
+            {/* 前週比較 */}
+            {state.profitHistory.length >= 2 && (() => {
+                const prev = state.profitHistory[state.profitHistory.length - 2];
+                const diffs = [
+                    { label: '売上', diff: result.sales - prev.sales },
+                    { label: '利益', diff: result.netProfit - prev.profit },
+                ];
+                return (
+                    <div className="ch2-result__pl" style={{ padding: '6px 10px', background: 'rgba(255,255,255,0.02)' }}>
+                        <div style={{ fontSize: '0.62rem', color: 'var(--ch2-text-sub, #7a8ba0)', marginBottom: 4 }}>前週比</div>
+                        {diffs.map((d, i) => (
+                            <div key={i} className="ch2-result__row" style={{ fontSize: '0.72rem', padding: '2px 0' }}>
+                                <span>{d.label}</span>
+                                <span style={{ fontWeight: 600, color: d.diff > 0 ? '#34d399' : d.diff < 0 ? '#ef4444' : 'inherit' }}>
+                                    {d.diff > 0 ? '↑' : d.diff < 0 ? '↓' : '→'} {d.diff >= 0 ? '+' : ''}¥{d.diff.toLocaleString()}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                );
+            })()}
 
             {/* 残高 */}
             <div className="ch2-result__balance">

@@ -88,9 +88,14 @@ export default function EventDisplay() {
                     </button>
                 ))
             ) : (
-                <button className="btn btn-primary" onClick={() => dismissEvent()}>
-                    次へ →
-                </button>
+                <>
+                    <button className="btn btn-primary" onClick={() => dismissEvent()}>
+                        次へ →
+                    </button>
+                    <button onClick={() => dismissEvent()} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.65rem', cursor: 'pointer', marginTop: 6, opacity: 0.6 }}>
+                        スキップ ▸
+                    </button>
+                </>
             )}
         </div>
     );

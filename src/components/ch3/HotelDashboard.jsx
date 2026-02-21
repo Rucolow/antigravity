@@ -1,10 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
+import GoalBar from '../GoalBar';
+import AdvisorBar from '../AdvisorBar';
+import WeeklyFocusBar from '../WeeklyFocusBar';
+import { CH3_GOAL } from '../../data/chapterGoals';
+import { getWeeklyFocusCards } from '../../data/weeklyFocusCards';
 import { useHotelStore } from '../../store/hotelEngine';
+import KPITooltip from '../KPITooltip';
+import BenchmarkBar from '../BenchmarkBar';
 import { PROPERTIES, CH3_PHASES, getCh3Phase, getCh3Month, CH3_STAFF, OTA_LEVELS, SOLO_ROOM_LIMIT } from '../../data/ch3Constants';
 
 export default function HotelDashboard() {
     const state = useHotelStore(s => s);
     const confirmWeek = useHotelStore(s => s.confirmWeek);
+    const [selectedFocus, setSelectedFocus] = useState(state._lastFocus || null);
     const hireStaff = useHotelStore(s => s.hireStaff);
     const fireStaff = useHotelStore(s => s.fireStaff);
     const setPhase = useHotelStore(s => s.setPhase);
@@ -41,20 +49,25 @@ export default function HotelDashboard() {
                 )}
             </div>
 
+            {/* チャプターゴール */}
+            <GoalBar goal={CH3_GOAL} state={state} />
+            <AdvisorBar chapter={3} state={state} />
+            <WeeklyFocusBar cards={getWeeklyFocusCards(3)} selected={selectedFocus} onSelect={setSelectedFocus} />
+
             {/* KPIグリッド */}
             <div className="ch3-kpi-grid">
                 <div className="ch3-kpi">
-                    <div className="ch3-kpi__label">稼働率</div>
+                    <div className="ch3-kpi__label"><KPITooltip term="稼働率">稼働率</KPITooltip></div>
                     <div className={`ch3-kpi__value ch3-kpi__value${occColor}`}>{occPct}%</div>
                 </div>
                 <div className="ch3-kpi">
-                    <div className="ch3-kpi__label">ADR</div>
+                    <div className="ch3-kpi__label"><KPITooltip term="ADR">ADR</KPITooltip></div>
                     <div className="ch3-kpi__value ch3-kpi__value--accent">
                         ¥{state.weeklyADR.toLocaleString()}
                     </div>
                 </div>
                 <div className="ch3-kpi">
-                    <div className="ch3-kpi__label">RevPAR</div>
+                    <div className="ch3-kpi__label"><KPITooltip term="RevPAR">RevPAR</KPITooltip></div>
                     <div className="ch3-kpi__value ch3-kpi__value--gold">
                         ¥{state.weeklyRevPAR.toLocaleString()}
                     </div>
@@ -66,6 +79,17 @@ export default function HotelDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* 業界ベンチマーク */}
+            {state.turn >= 4 && (
+                <div style={{ padding: '8px 16px' }}>
+                    <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.1em' }}>業界平均との比較</div>
+                    <BenchmarkBar label="稼働率" value={occPct} avg={70} max={100} unit="%" />
+                    <BenchmarkBar label="ADR" value={state.weeklyADR} avg={8000} max={20000} unit="" />
+                    <BenchmarkBar label="RevPAR" value={state.weeklyRevPAR} avg={5600} max={15000} unit="" />
+                    <BenchmarkBar label="口コミ" value={state.reputation} avg={3.8} max={5} unit="" />
+                </div>
+            )}
 
             {/* 稼働率ゲージ */}
             <div className="ch3-card">
@@ -189,9 +213,30 @@ export default function HotelDashboard() {
                 </button>
             )}
 
+            {/* オートモード */}
+            {state.turn >= 10 && (
+                <button
+                    onClick={() => useHotelStore.setState({ autoMode: !state.autoMode })}
+                    className="ch3-btn"
+                    style={{
+                        background: state.autoMode ? 'var(--ch3-accent)' : 'transparent',
+                        color: state.autoMode ? '#fff' : 'var(--ch3-accent)',
+                        border: '1px solid var(--ch3-accent)',
+                        fontSize: '0.72rem', marginBottom: 8,
+                    }}
+                >
+                    ⚡ オート {state.autoMode ? 'ON' : 'OFF'}
+                </button>
+            )}
+
             {/* 経営確定 */}
-            <button className="ch3-btn" onClick={() => confirmWeek({})}>
-                今週の経営を確定 →
+            <button className="ch3-btn" disabled={!selectedFocus} onClick={() => {
+                const card = getWeeklyFocusCards(3).find(c => c.id === selectedFocus);
+                confirmWeek({ _focus: card ? card.apply() : {} });
+                useHotelStore.setState({ _lastFocus: selectedFocus });
+                setSelectedFocus(null);
+            }}>
+                {!selectedFocus ? '⚡ 判断を選んでください' : '今週の経営を確定 →'}
             </button>
 
             {/* 累計 */}

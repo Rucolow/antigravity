@@ -2,10 +2,20 @@
  * 週結果表示画面
  */
 import React from 'react';
+import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import { useECStore } from '../../store/ecEngine';
+import { detectBehaviorMilestone } from '../../data/behaviorMilestones';
 
 export default function ECResult() {
     const state = useECStore();
+    const autoMode = state.autoMode;
+
+    // 行動変化マイルストーン
+    const behaviorMs = detectBehaviorMilestone(4, state, state.weekResult || {});
+    if (behaviorMs && !(state._behaviorMilestones || []).includes(behaviorMs.id)) {
+        useECStore.setState({ _behaviorMilestones: [...(state._behaviorMilestones || []), behaviorMs.id] });
+    }
+    useAutoAdvance(autoMode && !behaviorMs, () => state.nextTurn());
 
     const profitClass = (state.weeklyProfit || 0) >= 0 ? 'ch4-kpi__value--green' : 'ch4-kpi__value--red';
 
@@ -49,6 +59,29 @@ export default function ECResult() {
                     <div className="ch4-kpi__value">{state.roas || 0}x</div>
                 </div>
             </div>
+
+            {/* 前週比較 */}
+            {state.profitHistory.length >= 2 && (() => {
+                const prev = state.profitHistory[state.profitHistory.length - 2];
+                const diffs = [
+                    { label: '売上', diff: (state.weeklySales || 0) - (prev.sales || 0), fmt: v => `¥${v.toLocaleString()}` },
+                    { label: '利益', diff: (state.weeklyProfit || 0) - (prev.profit || 0), fmt: v => `¥${v.toLocaleString()}` },
+                    { label: '注文', diff: (state.weeklyOrders || 0) - (prev.orders || 0), fmt: v => `${v}件` },
+                ];
+                return (
+                    <div className="ch4-card" style={{ padding: '8px 14px' }}>
+                        <div style={{ fontSize: '0.62rem', color: 'var(--ch4-text-sub)', marginBottom: 4 }}>前週比</div>
+                        {diffs.map((d, i) => (
+                            <div key={i} className="ch4-row" style={{ fontSize: '0.72rem', padding: '2px 0' }}>
+                                <span className="ch4-row__label">{d.label}</span>
+                                <span className="ch4-row__value" style={{ fontWeight: 600, color: d.diff > 0 ? 'var(--ch4-green)' : d.diff < 0 ? 'var(--ch4-red)' : 'inherit' }}>
+                                    {d.diff > 0 ? '↑' : d.diff < 0 ? '↓' : '→'} {d.diff >= 0 ? '+' : ''}{d.fmt(d.diff)}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                );
+            })()}
 
             {/* 顧客内訳 */}
             <div className="ch4-card">

@@ -1,6 +1,6 @@
 // バランス定数 — Ch.0 設計書 v3 準拠
 
-export const TARGET_MONEY = 500000;
+export const TARGET_MONEY = 300000;
 export const TOTAL_DAYS = 7;
 
 // バイト日給
@@ -31,7 +31,7 @@ export const COST_REDUCTIONS = {
   cheapSim: {
     name: '格安SIM',
     weeklyReduction: 750,      // 通信費 ¥5,000→¥2,000/月 = 週¥750節約
-    moneyThreshold: 500000,    // ¥500K超で提案
+    moneyThreshold: 300000,    // ¥300K超で提案
   },
 };
 

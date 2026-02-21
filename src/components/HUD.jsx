@@ -66,11 +66,7 @@ export default function HUD() {
 
     const baitoName = baitoType ? BAITO[baitoType]?.name : '';
 
-    // ひとこと
-    const tip = stamina >= 80 ? { text: 'ガンガンいこう！', color: 'var(--emerald)' }
-        : stamina >= 60 ? { text: '無理しすぎずにね', color: 'var(--text-muted)' }
-            : stamina >= 30 ? { text: '休み多めに…', color: 'var(--gold)' }
-                : { text: 'しっかり休もう！', color: 'var(--red)' };
+
 
     const openProfile = CHAR_PROFILES[profileOpen];
 
@@ -179,10 +175,7 @@ export default function HUD() {
                 </div>
             </div>
 
-            {/* Row 5: ひとこと */}
-            <div className="hud__tip" style={{ color: tip.color }}>
-                💬 {tip.text}
-            </div>
+
 
             {/* Character Profile Popup */}
             {openProfile && (

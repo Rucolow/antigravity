@@ -6,6 +6,8 @@ import { useECStore } from '../../store/ecEngine';
 import { useGameStore } from '../../store/gameEngine';
 import { useREStore } from '../../store/realEstateEngine';
 import { PRODUCT_CATEGORIES, BRAND_CONCEPTS } from '../../data/ch4Constants';
+import { gradeCh4 } from '../../data/chapterGrade';
+import GradeDisplay from '../GradeDisplay';
 
 export default function Ch4Report() {
     const state = useECStore();
@@ -20,6 +22,13 @@ export default function Ch4Report() {
                 <div className="ch4-header__chapter">Chapter 4 — EC・D2C</div>
                 <div className="ch4-header__title">振り返りレポート</div>
             </div>
+
+            <GradeDisplay result={gradeCh4({
+                ltvCacRatio: state.ltvCacRatio || 0,
+                organicRatio: state.organicRatio || 0,
+                money: state.money,
+                skillCount: (state.skills || []).length,
+            })} chapter={4} />
 
             {/* EXIT結果 */}
             <div className="ch4-exit-value">
@@ -195,8 +204,10 @@ ECは——受注通知のプッシュ音。
                 <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--ch4-gold)', marginTop: '0.1rem' }}>
                     ¥{(state.money || 0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: '0.58rem', color: 'var(--ch4-text-sub)', marginTop: '0.1rem' }}>
-                    → Ch.5「不動産投資」へ引き継がれます
+                <div style={{ fontSize: '0.78rem', lineHeight: 1.7, marginTop: '0.5rem', padding: '10px 12px', borderRadius: 8, background: 'rgba(99,102,241,0.08)' }}>
+                    <p style={{ margin: '0 0 4px', fontWeight: 600 }}>📘 最後の挑戦</p>
+                    <p style={{ margin: 0 }}>事業で稼いだ資金を、資産に変えて「お金に働いてもらう」段階へ。</p>
+                    <p style={{ margin: 0 }}>P/Lを超え、B/S（貸借対照表）で考える世界が始まる。</p>
                 </div>
                 <button
                     className="ch4-btn ch4-btn--primary"

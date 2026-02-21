@@ -421,7 +421,24 @@ export function createCh3TaxEvent(state) {
 export function getCh3EventForTurn(turn, state) {
     const triggered = state._triggeredEvents || [];
 
-    // ケンジアーク
+    // ── 優先順位1: アヤ合流（固定・確定発火） ──
+    if (turn >= 1 && turn <= 3 && state.ayaFromCh2 && !state.ayaJoined && !triggered.includes('aya_frontdesk')) {
+        return {
+            id: 'aya_frontdesk',
+            type: 'character',
+            title: 'アヤ、フロントに立つ',
+            text: `アヤさんが「今度はお客さんの笑顔を直接見られる。接客、私がやります。」\nカフェ→小売→宿泊。アヤの接客スキルが口コミ評価に貢献。`,
+            effect: { reputation: 0.2, ayaJoined: true },
+        };
+    }
+
+    // ── 優先順位2: 消費税イベント（条件付き固定・重要） ──
+    if (turn >= 28 && !triggered.includes('consumption_tax')) {
+        const taxEvent = createCh3TaxEvent(state);
+        if (taxEvent) return taxEvent;
+    }
+
+    // ── 優先順位3: ケンジアーク（stage順序制御付き） ──
     const nextKenjiStage = (state.kenjiCh3Stage || 0) + 1;
     const kenjiEvent = KENJI_CH3_ARC.find(k =>
         k.stage === nextKenjiStage &&
@@ -436,7 +453,7 @@ export function getCh3EventForTurn(turn, state) {
         };
     }
 
-    // 必須イベント（OTAアルゴ変更）
+    // ── 優先順位4: 必須イベント（OTAアルゴリズム変更 etc.） ──
     const requiredEvent = TURNING_POINT_EVENTS.find(e =>
         e.required &&
         !triggered.includes(e.id) &&
@@ -448,7 +465,61 @@ export function getCh3EventForTurn(turn, state) {
         }
     }
 
-    // 転換点イベント（Phase B中心、ランダム選択）
+    // ── 優先順位4.5: フォースドチョイス（中盤の経営判断を強制） ──
+    const forcedChoices = [
+        {
+            id: 'forced_pricing_review',
+            turn: 20,
+            type: 'turning_point',
+            title: '料金体系の見直し',
+            text: `OTAのレビュースコアが上がってきた。\n「この品質なら、もう少し強気の価格設定でいけるのでは？」\n\nただし値上げは稼働率に影響する。ADRか稼働率か。`,
+            choices: [
+                {
+                    label: '全体に10%値上げ（ADR向上、稼働率リスク）',
+                    response: '思い切って値上げ。ADRは上がったが、稼働率が少し下がった。「価格と稼働のトレードオフ」を学んだ。',
+                    effect: { reputation: -0.1, money: 100000 },
+                },
+                {
+                    label: '週末プレミアム制（メリハリ型）',
+                    response: '週末のみ20%値上げ、平日は据え置き。ダイナミックプライシングの第一歩。週末のRevPARは確実に上がった。',
+                    effect: { reputation: 0.2, money: 50000 },
+                },
+                {
+                    label: '現状維持（稼働率優先）',
+                    response: '今の価格を守る。「まず稼働率を上げてからが勝負」という判断。',
+                    effect: { reputation: 0.05 },
+                },
+            ],
+        },
+        {
+            id: 'forced_renovation',
+            turn: 30,
+            type: 'turning_point',
+            title: 'リノベーションの判断',
+            text: `建物が少しずつ古くなってきた。\nレビューに「設備が古い」というコメントがちらほら。\n\n今投資するか、EXITまで我慢するか。`,
+            choices: [
+                {
+                    label: '部分リノベ（¥2,000,000投資）',
+                    response: '水回りと照明をリノベ。レビュースコアが改善。投資額は大きいが、長期的なADR向上が見込める。',
+                    effect: { money: -2000000, reputation: 0.3 },
+                },
+                {
+                    label: '清掃強化で対応（¥200,000/月）',
+                    response: '清掃を徹底して「古いけど清潔」を目指す。コストは低いが、根本解決ではない。',
+                    effect: { money: -200000, reputation: 0.1 },
+                },
+                {
+                    label: 'EXITまで現状維持',
+                    response: '投資は控える。短期的にはキャッシュを守れるが、レビューへの影響が気になる。',
+                    effect: {},
+                },
+            ],
+        },
+    ];
+    const forcedHit = forcedChoices.find(f => turn === f.turn && !triggered.includes(f.id));
+    if (forcedHit) return forcedHit;
+
+    // ── 優先順位5: 転換点イベント（Phase B/C中心、確率25%） ──
     const phase = getCh3Phase(turn);
     if (phase === 'B' || phase === 'C') {
         const eligibleTP = TURNING_POINT_EVENTS.filter(e =>
@@ -462,8 +533,9 @@ export function getCh3EventForTurn(turn, state) {
         }
     }
 
-    // キャラクターイベント
+    // ── 優先順位6: キャラクターイベント（確率20%、アヤ以外） ──
     const eligibleChar = CHARACTER_EVENTS.filter(e =>
+        e.id !== 'aya_frontdesk' &&   // アヤは優先順位1で処理済み
         !triggered.includes(e.id) &&
         turn >= e.turnRange[0] && turn <= e.turnRange[1] &&
         (!e.condition || e.condition(state))
@@ -472,20 +544,13 @@ export function getCh3EventForTurn(turn, state) {
         return eligibleChar[Math.floor(Math.random() * eligibleChar.length)];
     }
 
-    // カオスイベント
+    // ── 優先順位7: カオスイベント（確率12%） ──
     const eligibleChaos = CHAOS_EVENTS.filter(e =>
         !triggered.includes(e.id) &&
-        turn >= e.turnRange[0] && turn <= e.turnRange[1] &&
-        (!e.once || !triggered.includes(e.id))
+        turn >= e.turnRange[0] && turn <= e.turnRange[1]
     );
     if (eligibleChaos.length > 0 && Math.random() < 0.12) {
         return eligibleChaos[Math.floor(Math.random() * eligibleChaos.length)];
-    }
-
-    // 消費税イベント
-    if (turn >= 28 && !triggered.includes('consumption_tax')) {
-        const taxEvent = createCh3TaxEvent(state);
-        if (taxEvent) return taxEvent;
     }
 
     return null;
