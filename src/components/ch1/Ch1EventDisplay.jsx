@@ -59,14 +59,9 @@ export default function Ch1EventDisplay() {
                     ))}
                 </div>
             ) : (
-                <>
-                    <button className="ch1-setup__confirm" onClick={() => dismissEvent()}>
-                        OK →
-                    </button>
-                    <button onClick={() => dismissEvent()} style={{ background: 'none', border: 'none', color: '#8b7355', fontSize: '0.65rem', cursor: 'pointer', marginTop: 6, opacity: 0.5 }}>
-                        スキップ ▸
-                    </button>
-                </>
+                <button className="ch1-setup__confirm" onClick={() => dismissEvent()}>
+                    OK →
+                </button>
             )}
         </div>
     );

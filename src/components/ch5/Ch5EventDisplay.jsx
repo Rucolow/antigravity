@@ -77,14 +77,9 @@ export default function Ch5EventDisplay() {
                     ))}
                 </div>
             ) : (
-                <>
-                    <button className="ch5-btn ch5-btn--primary" onClick={() => dismissEvent(null)}>
-                        OK →
-                    </button>
-                    <button onClick={() => dismissEvent(null)} style={{ background: 'none', border: 'none', color: 'var(--ch5-text-sub)', fontSize: '0.65rem', cursor: 'pointer', marginTop: 6, opacity: 0.5, width: '100%' }}>
-                        スキップ ▸
-                    </button>
-                </>
+                <button className="ch5-btn ch5-btn--primary" onClick={() => dismissEvent(null)}>
+                    OK →
+                </button>
             )}
         </>
     );

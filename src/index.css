@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Press+Start+2P&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
 
 /* ── Design Tokens (Light Theme) ── */
 :root {
@@ -23,7 +23,8 @@
   --purple: #7840c8;
   --cyan: #1898a8;
 
-  --font-body: 'DotGothic16', 'Noto Sans JP', sans-serif;
+  --font-body: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+  --font-dot: 'DotGothic16', monospace;
   --font-pixel: 'Press Start 2P', monospace;
   --font-mono: 'IBM Plex Mono', monospace;
 
@@ -133,7 +134,7 @@ body {
 }
 
 .hud__week {
-  font-family: var(--font-pixel);
+  font-family: var(--font-dot);
   font-size: 0.75rem;
   color: var(--text-secondary);
   letter-spacing: 0.02em;
@@ -835,7 +836,7 @@ body {
 }
 
 .allocation__days {
-  font-family: var(--font-pixel);
+  font-family: var(--font-dot);
   font-size: 0.9rem;
   width: 36px;
   text-align: center;
@@ -1025,10 +1026,10 @@ body {
 
 /* ── Section Headers ── */
 .section-header {
-  font-family: var(--font-pixel);
-  font-size: 0.5rem;
+  font-family: var(--font-dot);
+  font-size: 0.7rem;
   color: var(--text-muted);
-  letter-spacing: 0.15em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 12px;
   margin-top: 16px;

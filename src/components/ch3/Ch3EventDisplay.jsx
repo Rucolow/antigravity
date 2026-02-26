@@ -61,14 +61,9 @@ export default function Ch3EventDisplay() {
                         ))}
                     </div>
                 ) : (
-                    <>
-                        <button className="ch3-btn" onClick={() => dismissEvent()}>
-                            続ける →
-                        </button>
-                        <button onClick={() => dismissEvent()} style={{ background: 'none', border: 'none', color: 'var(--ch3-text-sub, #6a7f99)', fontSize: '0.65rem', cursor: 'pointer', marginTop: 6, opacity: 0.5, width: '100%' }}>
-                            スキップ ▸
-                        </button>
-                    </>
+                    <button className="ch3-btn" onClick={() => dismissEvent()}>
+                        続ける →
+                    </button>
                 )}
             </div>
         </div>

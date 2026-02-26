@@ -85,18 +85,13 @@ export default function Ch4EventDisplay() {
 
                 {/* 選択肢がないイベント → 了解ボタン */}
                 {!event.choices && (
-                    <>
-                        <button
-                            className="ch4-btn ch4-btn--primary"
-                            onClick={handleDismiss}
-                            style={{ marginTop: '0.75rem' }}
-                        >
-                            了解
-                        </button>
-                        <button onClick={handleDismiss} style={{ background: 'none', border: 'none', color: 'var(--ch4-text-sub)', fontSize: '0.65rem', cursor: 'pointer', marginTop: 6, opacity: 0.5, width: '100%' }}>
-                            スキップ ▸
-                        </button>
-                    </>
+                    <button
+                        className="ch4-btn ch4-btn--primary"
+                        onClick={handleDismiss}
+                        style={{ marginTop: '0.75rem' }}
+                    >
+                        了解
+                    </button>
                 )}
             </div>
         </>

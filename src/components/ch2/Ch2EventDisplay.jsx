@@ -75,9 +75,6 @@ export default function Ch2EventDisplay() {
                     <button className="ch2-actions__go" onClick={() => dismissEvent()}>
                         了解 →
                     </button>
-                    <button onClick={() => dismissEvent()} style={{ background: 'none', border: 'none', color: 'var(--ch2-text-sub, #7a8ba0)', fontSize: '0.65rem', cursor: 'pointer', marginTop: 6, opacity: 0.5, width: '100%' }}>
-                        スキップ ▸
-                    </button>
                 </div>
             )}
         </div>
